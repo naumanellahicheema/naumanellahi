@@ -4,66 +4,39 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Premium Portfolio Design System */
-
 @layer base {
   :root {
-    /* Core Colors - Elegant dark theme */
     --background: 0 0% 3%;
     --foreground: 0 0% 95%;
-
     --card: 0 0% 6%;
     --card-foreground: 0 0% 95%;
-
     --popover: 0 0% 6%;
     --popover-foreground: 0 0% 95%;
-
     --primary: 0 0% 100%;
     --primary-foreground: 0 0% 3%;
-
     --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 95%;
-
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 60%;
-
     --accent: 0 0% 18%;
     --accent-foreground: 0 0% 95%;
-
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
-
     --border: 0 0% 15%;
     --input: 0 0% 15%;
     --ring: 0 0% 80%;
-
     --radius: 0.75rem;
-
-    /* Custom Portfolio Colors */
-    --hero-gradient-start: 0 0% 3%;
-    --hero-gradient-mid: 0 0% 6%;
-    --hero-gradient-end: 0 0% 3%;
-    
     --glow-primary: 0 0% 100%;
-    --glow-secondary: 0 0% 50%;
-    
-    --text-gradient-start: 0 0% 100%;
-    --text-gradient-end: 0 0% 60%;
-
-    /* Admin Panel - Pure B&W */
-    --admin-background: 0 0% 100%;
-    --admin-foreground: 0 0% 5%;
+    --admin-bg: 0 0% 100%;
+    --admin-fg: 0 0% 5%;
     --admin-card: 0 0% 98%;
-    --admin-card-foreground: 0 0% 5%;
     --admin-border: 0 0% 90%;
     --admin-muted: 0 0% 95%;
-    --admin-muted-foreground: 0 0% 40%;
+    --admin-muted-fg: 0 0% 40%;
     --admin-accent: 0 0% 5%;
-    --admin-accent-foreground: 0 0% 100%;
-
+    --admin-accent-fg: 0 0% 100%;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 0 0% 20%;
     --sidebar-primary: 0 0% 5%;
@@ -74,7 +47,7 @@
     --sidebar-ring: 0 0% 50%;
   }
 
-  .dark, .admin-theme {
+  .dark {
     --background: 0 0% 100%;
     --foreground: 0 0% 5%;
     --card: 0 0% 98%;
@@ -96,19 +69,12 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
+  * { @apply border-border; }
+  html { scroll-behavior: smooth; }
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
   }
-
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
     @apply font-bold tracking-tight;
@@ -116,206 +82,71 @@
 }
 
 @layer components {
-  /* Hero Section Styles */
   .hero-section {
     @apply relative min-h-screen flex items-center justify-center overflow-hidden;
-    background: radial-gradient(ellipse at 50% 0%, hsl(var(--hero-gradient-mid)) 0%, hsl(var(--hero-gradient-start)) 50%, hsl(var(--hero-gradient-end)) 100%);
+    background: radial-gradient(ellipse at 50% 0%, hsl(0 0% 6%) 0%, hsl(0 0% 3%) 50%, hsl(0 0% 3%) 100%);
   }
-
   .hero-glow {
-    @apply absolute w-[600px] h-[600px] rounded-full blur-[120px] opacity-20;
+    @apply absolute w-96 h-96 rounded-full blur-3xl opacity-20;
     background: radial-gradient(circle, hsl(var(--glow-primary)) 0%, transparent 70%);
   }
-
-  /* Text Gradient */
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--text-gradient-start)) 0%, hsl(var(--text-gradient-end)) 100%);
+    background-image: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(0 0% 60%) 100%);
   }
-
-  /* Glass Card */
   .glass-card {
     @apply bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
-
-  /* Floating Animation */
-  .float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-  }
-
-  /* Subtle Pulse */
-  .pulse-soft {
-    animation: pulse-soft 3s ease-in-out infinite;
-  }
-
-  @keyframes pulse-soft {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
-  }
-
-  /* Section Styles */
-  .section-container {
-    @apply max-w-7xl mx-auto px-6 lg:px-8 py-24 lg:py-32;
-  }
-
-  .section-title {
-    @apply text-4xl md:text-5xl lg:text-6xl font-bold mb-6;
-  }
-
-  .section-subtitle {
-    @apply text-lg md:text-xl text-muted-foreground max-w-2xl;
-  }
-
-  /* Button Variants */
+  .section-container { @apply max-w-7xl mx-auto px-6 lg:px-8 py-24 lg:py-32; }
+  .section-title { @apply text-4xl md:text-5xl lg:text-6xl font-bold mb-6; }
+  .section-subtitle { @apply text-lg md:text-xl text-muted-foreground max-w-2xl; }
   .btn-hero {
-    @apply inline-flex items-center justify-center gap-2 px-8 py-4 text-lg font-semibold;
-    @apply bg-primary text-primary-foreground rounded-full;
-    @apply transition-all duration-300 ease-out;
-    @apply hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)];
+    @apply inline-flex items-center justify-center gap-2 px-8 py-4 text-lg font-semibold bg-primary text-primary-foreground rounded-full transition-all duration-300 ease-out;
   }
-
+  .btn-hero:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(255,255,255,0.3); }
   .btn-outline-hero {
-    @apply inline-flex items-center justify-center gap-2 px-8 py-4 text-lg font-semibold;
-    @apply bg-transparent text-foreground border-2 border-foreground/30 rounded-full;
-    @apply transition-all duration-300 ease-out;
-    @apply hover:bg-foreground/10 hover:border-foreground/50;
+    @apply inline-flex items-center justify-center gap-2 px-8 py-4 text-lg font-semibold bg-transparent text-foreground border-2 border-foreground/30 rounded-full transition-all duration-300 ease-out;
   }
-
-  /* Project Card */
+  .btn-outline-hero:hover { @apply bg-foreground/10 border-foreground/50; }
   .project-card {
-    @apply group relative overflow-hidden rounded-2xl bg-card border border-border;
-    @apply transition-all duration-500 ease-out;
-    @apply hover:border-foreground/30 hover:shadow-[0_20px_60px_-20px_rgba(255,255,255,0.1)];
+    @apply relative overflow-hidden rounded-2xl bg-card border border-border transition-all duration-500 ease-out;
   }
-
-  .project-card-image {
-    @apply w-full aspect-video object-cover transition-transform duration-700 ease-out;
-    @apply group-hover:scale-110;
-  }
-
-  /* Skill Bar */
-  .skill-bar {
-    @apply h-2 bg-secondary rounded-full overflow-hidden;
-  }
-
-  .skill-bar-fill {
-    @apply h-full bg-gradient-to-r from-foreground/80 to-foreground rounded-full;
-    @apply transition-all duration-1000 ease-out;
-  }
-
-  /* Experience Timeline */
-  .timeline-line {
-    @apply absolute left-6 top-0 bottom-0 w-px bg-border;
-  }
-
-  .timeline-dot {
-    @apply absolute left-4 w-5 h-5 rounded-full bg-foreground border-4 border-background;
-  }
-
-  /* Admin Panel Styles */
-  .admin-container {
-    @apply min-h-screen bg-[hsl(var(--admin-background))];
-  }
-
-  .admin-card {
-    @apply bg-[hsl(var(--admin-card))] border border-[hsl(var(--admin-border))] rounded-xl;
-    @apply shadow-sm;
-  }
-
-  .admin-sidebar {
-    @apply w-64 bg-[hsl(var(--admin-background))] border-r border-[hsl(var(--admin-border))];
-  }
-
+  .project-card:hover { @apply border-foreground/30; box-shadow: 0 20px 60px -20px rgba(255,255,255,0.1); }
+  .skill-bar { @apply h-2 bg-secondary rounded-full overflow-hidden; }
+  .skill-bar-fill { @apply h-full bg-gradient-to-r from-foreground/80 to-foreground rounded-full transition-all duration-1000 ease-out; }
+  .admin-container { @apply min-h-screen; background: hsl(var(--admin-bg)); color: hsl(var(--admin-fg)); }
+  .admin-card { background: hsl(var(--admin-card)); border: 1px solid hsl(var(--admin-border)); @apply rounded-xl shadow-sm; }
+  .admin-sidebar { @apply w-64 border-r; background: hsl(var(--admin-bg)); border-color: hsl(var(--admin-border)); }
   .admin-nav-item {
-    @apply flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg;
-    @apply text-[hsl(var(--admin-muted-foreground))] transition-all duration-200;
-    @apply hover:bg-[hsl(var(--admin-muted))] hover:text-[hsl(var(--admin-foreground))];
+    @apply flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200;
+    color: hsl(var(--admin-muted-fg));
   }
-
-  .admin-nav-item.active {
-    @apply bg-[hsl(var(--admin-accent))] text-[hsl(var(--admin-accent-foreground))];
-  }
-
+  .admin-nav-item:hover { background: hsl(var(--admin-muted)); color: hsl(var(--admin-fg)); }
+  .admin-nav-item.active { background: hsl(var(--admin-accent)); color: hsl(var(--admin-accent-fg)); }
   .admin-btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium;
-    @apply bg-[hsl(var(--admin-accent))] text-[hsl(var(--admin-accent-foreground))] rounded-lg;
-    @apply transition-all duration-200;
-    @apply hover:opacity-90;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200;
+    background: hsl(var(--admin-accent)); color: hsl(var(--admin-accent-fg));
   }
-
+  .admin-btn:hover { opacity: 0.9; }
   .admin-btn-outline {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium;
-    @apply bg-transparent text-[hsl(var(--admin-foreground))] border border-[hsl(var(--admin-border))] rounded-lg;
-    @apply transition-all duration-200;
-    @apply hover:bg-[hsl(var(--admin-muted))];
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 bg-transparent;
+    color: hsl(var(--admin-fg)); border: 1px solid hsl(var(--admin-border));
   }
-
+  .admin-btn-outline:hover { background: hsl(var(--admin-muted)); }
   .admin-input {
-    @apply w-full px-4 py-2.5 text-sm rounded-lg;
-    @apply bg-[hsl(var(--admin-background))] border border-[hsl(var(--admin-border))];
-    @apply text-[hsl(var(--admin-foreground))] placeholder:text-[hsl(var(--admin-muted-foreground))];
-    @apply focus:outline-none focus:ring-2 focus:ring-[hsl(var(--admin-accent))];
+    @apply w-full px-4 py-2.5 text-sm rounded-lg focus:outline-none focus:ring-2;
+    background: hsl(var(--admin-bg)); border: 1px solid hsl(var(--admin-border)); color: hsl(var(--admin-fg));
   }
-
-  /* Reveal Animation */
-  .reveal {
-    @apply opacity-0 translate-y-8;
-    transition: opacity 0.8s ease, transform 0.8s ease;
-  }
-
-  .reveal.visible {
-    @apply opacity-100 translate-y-0;
-  }
-
-  /* Marquee Animation */
-  .marquee {
-    animation: marquee 30s linear infinite;
-  }
-
-  @keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
-  /* Custom Scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-background;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/30 rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/50;
-  }
+  .admin-input:focus { --tw-ring-color: hsl(var(--admin-accent)); }
+  .admin-input::placeholder { color: hsl(var(--admin-muted-fg)); }
+  .admin-label { @apply block text-sm font-medium mb-2; color: hsl(var(--admin-fg)); }
+  .admin-table { @apply w-full text-sm; }
+  .admin-table th { @apply text-left px-4 py-3 font-medium border-b; color: hsl(var(--admin-muted-fg)); border-color: hsl(var(--admin-border)); }
+  .admin-table td { @apply px-4 py-3 border-b; border-color: hsl(var(--admin-border)); }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .perspective-1000 {
-    perspective: 1000px;
-  }
-
-  .preserve-3d {
-    transform-style: preserve-3d;
-  }
-
-  .backface-hidden {
-    backface-visibility: hidden;
-  }
+  .float { animation: float 6s ease-in-out infinite; }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
 }

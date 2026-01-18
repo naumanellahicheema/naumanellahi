@@ -29,8 +29,16 @@ serve(async (req) => {
       throw userError;
     }
 
-    // Get user ID
-    const userId = user?.user?.id;
+    // Get user ID - either from new user or find existing
+    let userId = user?.user?.id;
+    
+    if (!userId) {
+      // User might already exist, find them
+      const { data: users } = await supabaseAdmin.auth.admin.listUsers();
+      const existingUser = users?.users?.find(u => u.email === "naumancheema643@gmail.com");
+      userId = existingUser?.id;
+    }
+
     if (userId) {
       // Assign admin role
       const { error: roleError } = await supabaseAdmin
@@ -43,8 +51,9 @@ serve(async (req) => {
     return new Response(JSON.stringify({ success: true, message: "Admin user created" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

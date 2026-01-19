@@ -383,6 +383,7 @@ export type Database = {
           footer_text: string | null
           id: string
           logo_url: string | null
+          menu_items: Json | null
           meta_description: string | null
           meta_title: string | null
           site_name: string | null
@@ -398,6 +399,7 @@ export type Database = {
           footer_text?: string | null
           id?: string
           logo_url?: string | null
+          menu_items?: Json | null
           meta_description?: string | null
           meta_title?: string | null
           site_name?: string | null
@@ -413,6 +415,7 @@ export type Database = {
           footer_text?: string | null
           id?: string
           logo_url?: string | null
+          menu_items?: Json | null
           meta_description?: string | null
           meta_title?: string | null
           site_name?: string | null

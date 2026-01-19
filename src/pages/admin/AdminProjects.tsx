@@ -1,7 +1,9 @@
 import { useState, useCallback } from "react";
 import { useAllProjects, useCreateProject, useUpdateProject, useDeleteProject } from "@/hooks/usePortfolioData";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Save, X, ExternalLink, Image } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, ExternalLink, Eye, EyeOff, Star, Globe } from "lucide-react";
+import { ImageUpload } from "@/components/ui/ImageUpload";
+import { TagInput } from "@/components/ui/TagInput";
 
 const emptyProject = {
   title: "",
@@ -39,13 +41,12 @@ export default function AdminProjects() {
     
     try {
       const projectData = { ...editing };
-      // Generate slug if not provided
       if (!projectData.slug && projectData.title) {
         projectData.slug = projectData.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
       }
       
       if (isNew) {
-        const { id, ...data } = projectData;
+        const { id, created_at, updated_at, ...data } = projectData;
         await createProject.mutateAsync(data);
         toast({ title: "Project created successfully!" });
       } else {
@@ -65,6 +66,24 @@ export default function AdminProjects() {
     try {
       await deleteProject.mutateAsync(id);
       toast({ title: "Project deleted!" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const togglePublished = async (project: any) => {
+    try {
+      await updateProject.mutateAsync({ ...project, published: !project.published });
+      toast({ title: project.published ? "Project hidden" : "Project published" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const toggleFeatured = async (project: any) => {
+    try {
+      await updateProject.mutateAsync({ ...project, featured: !project.featured });
+      toast({ title: project.featured ? "Removed from featured" : "Added to featured" });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
@@ -101,15 +120,28 @@ export default function AdminProjects() {
         <button onClick={startNew} className="admin-btn"><Plus size={16} /> Add Project</button>
       </div>
 
+      {/* Modal */}
       {editing && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) { setEditing(null); setIsNew(false); } }}>
-          <div className="admin-card p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto" style={{ background: "hsl(var(--admin-bg))" }}>
+          <div className="admin-card p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto" style={{ background: "hsl(var(--admin-bg))" }}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold" style={{ color: "hsl(var(--admin-fg))" }}>{isNew ? "New Project" : "Edit Project"}</h2>
               <button onClick={() => { setEditing(null); setIsNew(false); }} className="p-1 hover:bg-gray-100 rounded"><X size={20} /></button>
             </div>
             
-            <div className="space-y-5">
+            <div className="space-y-6">
+              {/* Thumbnail Upload */}
+              <div>
+                <label className="admin-label">Thumbnail Image</label>
+                <ImageUpload
+                  value={editing.thumbnail_url}
+                  onChange={(url) => handleFieldChange("thumbnail_url", url)}
+                  onRemove={() => handleFieldChange("thumbnail_url", "")}
+                  folder="projects"
+                  placeholder="Upload project thumbnail"
+                />
+              </div>
+
               {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -180,59 +212,32 @@ export default function AdminProjects() {
                 />
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="admin-label">Website URL</label>
-                  <input
-                    type="url"
-                    value={editing.website_url || ""}
-                    onChange={(e) => handleFieldChange("website_url", e.target.value)}
-                    className="admin-input"
-                    placeholder="https://example.com"
-                  />
-                </div>
-                <div>
-                  <label className="admin-label">Thumbnail URL</label>
-                  <input
-                    type="url"
-                    value={editing.thumbnail_url || ""}
-                    onChange={(e) => handleFieldChange("thumbnail_url", e.target.value)}
-                    className="admin-input"
-                    placeholder="https://example.com/image.jpg"
-                  />
-                </div>
-              </div>
-              
               <div>
-                <label className="admin-label">Tech Stack (comma separated)</label>
+                <label className="admin-label">Website URL</label>
                 <input
-                  type="text"
-                  value={Array.isArray(editing.tech_stack) ? editing.tech_stack.join(", ") : ""}
-                  onChange={(e) => handleFieldChange("tech_stack", e.target.value.split(",").map(s => s.trim()).filter(Boolean))}
+                  type="url"
+                  value={editing.website_url || ""}
+                  onChange={(e) => handleFieldChange("website_url", e.target.value)}
                   className="admin-input"
-                  placeholder="React, Node.js, PostgreSQL"
+                  placeholder="https://example.com"
                 />
               </div>
               
               <div>
-                <label className="admin-label">Services Provided (comma separated)</label>
-                <input
-                  type="text"
-                  value={Array.isArray(editing.services_provided) ? editing.services_provided.join(", ") : ""}
-                  onChange={(e) => handleFieldChange("services_provided", e.target.value.split(",").map(s => s.trim()).filter(Boolean))}
-                  className="admin-input"
-                  placeholder="Web Development, UI/UX Design"
+                <label className="admin-label">Tech Stack</label>
+                <TagInput
+                  value={editing.tech_stack || []}
+                  onChange={(tags) => handleFieldChange("tech_stack", tags)}
+                  placeholder="Add technologies (press Enter)"
                 />
               </div>
-
+              
               <div>
-                <label className="admin-label">Image Gallery URLs (comma separated)</label>
-                <textarea
-                  rows={3}
-                  value={Array.isArray(editing.images) ? editing.images.join(", ") : ""}
-                  onChange={(e) => handleFieldChange("images", e.target.value.split(",").map(s => s.trim()).filter(Boolean))}
-                  className="admin-input resize-none"
-                  placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"
+                <label className="admin-label">Services Provided</label>
+                <TagInput
+                  value={editing.services_provided || []}
+                  onChange={(tags) => handleFieldChange("services_provided", tags)}
+                  placeholder="Add services (press Enter)"
                 />
               </div>
               
@@ -294,58 +299,103 @@ export default function AdminProjects() {
         </div>
       )}
 
-      <div className="admin-card overflow-hidden">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Industry</th>
-              <th>Country</th>
-              <th>Featured</th>
-              <th>Published</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {projects?.map((p: any) => (
-              <tr key={p.id}>
-                <td className="font-medium">{p.title}</td>
-                <td>{p.industry || "-"}</td>
-                <td>{p.country || "-"}</td>
-                <td>{p.featured ? "Yes" : "No"}</td>
-                <td>{p.published ? "Yes" : "No"}</td>
-                <td>
-                  <div className="flex items-center gap-2">
-                    {p.thumbnail_url && (
-                      <a href={p.thumbnail_url} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-gray-100 rounded" title="View thumbnail">
-                        <Image size={16} />
-                      </a>
-                    )}
-                    {p.website_url && (
-                      <a href={p.website_url} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-gray-100 rounded" title="Visit website">
-                        <ExternalLink size={16} />
-                      </a>
-                    )}
-                    <button onClick={() => startEdit(p)} className="p-1 hover:bg-gray-100 rounded" title="Edit">
-                      <Edit size={16} />
-                    </button>
-                    <button onClick={() => handleDelete(p.id)} className="p-1 hover:bg-gray-100 rounded text-red-500" title="Delete">
-                      <Trash2 size={16} />
-                    </button>
+      {/* Projects Grid */}
+      {projects && projects.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {projects.map((p: any) => (
+            <div key={p.id} className="admin-card overflow-hidden group">
+              {/* Thumbnail */}
+              <div className="aspect-video bg-gray-100 relative overflow-hidden">
+                {p.thumbnail_url ? (
+                  <img src={p.thumbnail_url} alt={p.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Globe size={48} style={{ color: "hsl(var(--admin-muted-fg))" }} />
                   </div>
-                </td>
-              </tr>
-            ))}
-            {(!projects || projects.length === 0) && (
-              <tr>
-                <td colSpan={6} className="text-center py-8" style={{ color: "hsl(var(--admin-muted-fg))" }}>
-                  No projects yet. Click "Add Project" to create one.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                )}
+                {/* Status Badges */}
+                <div className="absolute top-3 left-3 flex gap-2">
+                  {p.featured && (
+                    <span className="px-2 py-1 text-xs font-medium bg-yellow-400 text-yellow-900 rounded-full flex items-center gap-1">
+                      <Star size={12} /> Featured
+                    </span>
+                  )}
+                  {!p.published && (
+                    <span className="px-2 py-1 text-xs font-medium bg-gray-800 text-white rounded-full">Hidden</span>
+                  )}
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="p-4">
+                <h3 className="font-semibold text-lg mb-1" style={{ color: "hsl(var(--admin-fg))" }}>{p.title}</h3>
+                <div className="flex items-center gap-2 text-xs mb-2" style={{ color: "hsl(var(--admin-muted-fg))" }}>
+                  {p.industry && <span>{p.industry}</span>}
+                  {p.industry && p.country && <span>•</span>}
+                  {p.country && <span>{p.country}</span>}
+                </div>
+                {p.short_description && (
+                  <p className="text-sm line-clamp-2 mb-4" style={{ color: "hsl(var(--admin-muted-fg))" }}>
+                    {p.short_description}
+                  </p>
+                )}
+                
+                {/* Tech Stack Tags */}
+                {p.tech_stack && p.tech_stack.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {p.tech_stack.slice(0, 3).map((tech: string, i: number) => (
+                      <span key={i} className="px-2 py-0.5 text-xs rounded bg-gray-100" style={{ color: "hsl(var(--admin-fg))" }}>
+                        {tech}
+                      </span>
+                    ))}
+                    {p.tech_stack.length > 3 && (
+                      <span className="px-2 py-0.5 text-xs rounded bg-gray-100" style={{ color: "hsl(var(--admin-muted-fg))" }}>
+                        +{p.tech_stack.length - 3}
+                      </span>
+                    )}
+                  </div>
+                )}
+                
+                {/* Actions */}
+                <div className="flex items-center gap-2 pt-3 border-t" style={{ borderColor: "hsl(var(--admin-border))" }}>
+                  <button
+                    onClick={() => togglePublished(p)}
+                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    title={p.published ? "Hide" : "Publish"}
+                  >
+                    {p.published ? <Eye size={18} /> : <EyeOff size={18} />}
+                  </button>
+                  <button
+                    onClick={() => toggleFeatured(p)}
+                    className={`p-2 rounded-lg hover:bg-gray-100 transition-colors ${p.featured ? "text-yellow-500" : ""}`}
+                    title={p.featured ? "Remove from featured" : "Add to featured"}
+                  >
+                    <Star size={18} fill={p.featured ? "currentColor" : "none"} />
+                  </button>
+                  {p.website_url && (
+                    <a href={p.website_url} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg hover:bg-gray-100 transition-colors" title="Visit website">
+                      <ExternalLink size={18} />
+                    </a>
+                  )}
+                  <div className="flex-1" />
+                  <button onClick={() => startEdit(p)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors" title="Edit">
+                    <Edit size={18} />
+                  </button>
+                  <button onClick={() => handleDelete(p.id)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-red-500" title="Delete">
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="admin-card p-12 text-center">
+          <Globe size={48} className="mx-auto mb-4" style={{ color: "hsl(var(--admin-muted-fg))" }} />
+          <p style={{ color: "hsl(var(--admin-muted-fg))" }}>No projects yet.</p>
+          <button onClick={startNew} className="admin-btn mt-4"><Plus size={16} /> Add Your First Project</button>
+        </div>
+      )}
     </div>
   );
 }

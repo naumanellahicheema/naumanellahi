@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, RequireAdmin } from "@/hooks/useAuth";
+import { ScrollToTop } from "@/components/ScrollToTop";
+import { FloatingContact } from "@/components/FloatingContact";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Portfolio from "./pages/Portfolio";
@@ -31,7 +33,15 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminUsers from "./pages/admin/AdminUsers";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -40,18 +50,19 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/portfolio" element={<Portfolio />} />
-            <Route path="/portfolio/:slug" element={<ProjectDetail />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/experience" element={<Experience />} />
-            <Route path="/testimonials" element={<Testimonials />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
-            <Route path="/contact" element={<Contact />} />
+            <Route path="/" element={<><Index /><FloatingContact /></>} />
+            <Route path="/about" element={<><About /><FloatingContact /></>} />
+            <Route path="/portfolio" element={<><Portfolio /><FloatingContact /></>} />
+            <Route path="/portfolio/:slug" element={<><ProjectDetail /><FloatingContact /></>} />
+            <Route path="/services" element={<><Services /><FloatingContact /></>} />
+            <Route path="/experience" element={<><Experience /><FloatingContact /></>} />
+            <Route path="/testimonials" element={<><Testimonials /><FloatingContact /></>} />
+            <Route path="/blog" element={<><Blog /><FloatingContact /></>} />
+            <Route path="/blog/:slug" element={<><BlogPost /><FloatingContact /></>} />
+            <Route path="/contact" element={<><Contact /><FloatingContact /></>} />
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLogin />} />
             <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>

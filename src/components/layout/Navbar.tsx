@@ -4,14 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useSiteSettings } from "@/hooks/usePortfolioData";
 
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-  { href: "/portfolio", label: "Portfolio" },
-  { href: "/services", label: "Services" },
-  { href: "/experience", label: "Experience" },
-  { href: "/blog", label: "Blog" },
-  { href: "/contact", label: "Contact" },
+const allNavLinks = [
+  { href: "/", label: "Home", key: "home" },
+  { href: "/about", label: "About", key: "about" },
+  { href: "/portfolio", label: "Portfolio", key: "portfolio" },
+  { href: "/services", label: "Services", key: "services" },
+  { href: "/experience", label: "Experience", key: "experience" },
+  { href: "/blog", label: "Blog", key: "blog" },
+  { href: "/contact", label: "Contact", key: "contact" },
 ];
 
 export function Navbar() {
@@ -19,6 +19,14 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { data: settings } = useSiteSettings();
+
+  // Filter nav links based on menu_items visibility settings
+  const menuItems = settings?.menu_items as Record<string, boolean> | undefined;
+  const navLinks = allNavLinks.filter(link => {
+    // If menu_items is not set or the key doesn't exist, show by default
+    if (!menuItems) return true;
+    return menuItems[link.key] !== false;
+  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,9 +55,13 @@ export function Navbar() {
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
-              <span className="text-xl font-display font-bold text-foreground">
-                {settings?.site_name || "Nauman Ellahi"}
-              </span>
+              {settings?.logo_url ? (
+                <img src={settings.logo_url} alt={settings.site_name || "Logo"} className="h-10 w-auto" />
+              ) : (
+                <span className="text-xl font-display font-bold text-foreground">
+                  {settings?.site_name || "Nauman Ellahi"}
+                </span>
+              )}
             </Link>
 
             {/* Desktop Navigation */}

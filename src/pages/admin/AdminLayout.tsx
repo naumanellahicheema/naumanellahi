@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { LayoutDashboard, User, FolderOpen, Briefcase, GraduationCap, Award, MessageSquare, FileText, Mail, Image, Settings, Users, Search, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, User, FolderOpen, Briefcase, GraduationCap, Award, MessageSquare, FileText, Mail, Image, Settings, Users, Search, LogOut, Menu, X, PanelLeft } from "lucide-react";
 
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/pages", label: "Pages", icon: PanelLeft },
   { href: "/admin/profile", label: "Profile", icon: User },
   { href: "/admin/projects", label: "Projects", icon: FolderOpen },
   { href: "/admin/services", label: "Services", icon: Briefcase },

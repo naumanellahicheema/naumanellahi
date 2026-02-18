@@ -1,7 +1,9 @@
+import { useNavigate } from "react-router-dom";
 import { useAllProjects, useAllServices, useAllPosts, useContactMessages, useAllExperiences, useAllSkills, useAllTestimonials } from "@/hooks/usePortfolioData";
 import { FolderOpen, Briefcase, FileText, Mail, GraduationCap, Award, MessageSquare } from "lucide-react";
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const { data: projects } = useAllProjects();
   const { data: services } = useAllServices();
   const { data: posts } = useAllPosts();
@@ -13,13 +15,13 @@ export default function AdminDashboard() {
   const unreadMessages = messages?.filter((m: any) => !m.is_read).length || 0;
 
   const stats = [
-    { label: "Projects", value: projects?.length || 0, icon: FolderOpen },
-    { label: "Services", value: services?.length || 0, icon: Briefcase },
-    { label: "Blog Posts", value: posts?.length || 0, icon: FileText },
-    { label: "Messages", value: messages?.length || 0, badge: unreadMessages, icon: Mail },
-    { label: "Experience", value: experiences?.length || 0, icon: GraduationCap },
-    { label: "Skills", value: skills?.length || 0, icon: Award },
-    { label: "Testimonials", value: testimonials?.length || 0, icon: MessageSquare },
+    { label: "Projects", value: projects?.length || 0, icon: FolderOpen, href: "/admin/projects" },
+    { label: "Services", value: services?.length || 0, icon: Briefcase, href: "/admin/services" },
+    { label: "Blog Posts", value: posts?.length || 0, icon: FileText, href: "/admin/posts" },
+    { label: "Messages", value: messages?.length || 0, badge: unreadMessages, icon: Mail, href: "/admin/messages" },
+    { label: "Experience", value: experiences?.length || 0, icon: GraduationCap, href: "/admin/experience" },
+    { label: "Skills", value: skills?.length || 0, icon: Award, href: "/admin/skills" },
+    { label: "Testimonials", value: testimonials?.length || 0, icon: MessageSquare, href: "/admin/testimonials" },
   ];
 
   return (
@@ -27,9 +29,13 @@ export default function AdminDashboard() {
       <h1 className="text-2xl font-display font-bold mb-8" style={{ color: "hsl(var(--admin-fg))" }}>Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
-          <div key={stat.label} className="admin-card p-6">
+          <div
+            key={stat.label}
+            onClick={() => navigate(stat.href)}
+            className="admin-card p-6 cursor-pointer hover:border-gray-400 transition-all group"
+          >
             <div className="flex items-center justify-between mb-4">
-              <stat.icon size={24} style={{ color: "hsl(var(--admin-muted-fg))" }} />
+              <stat.icon size={24} style={{ color: "hsl(var(--admin-muted-fg))" }} className="group-hover:scale-110 transition-transform" />
               {stat.badge ? <span className="px-2 py-0.5 text-xs rounded-full" style={{ background: "hsl(var(--admin-accent))", color: "hsl(var(--admin-accent-fg))" }}>{stat.badge} new</span> : null}
             </div>
             <div className="text-3xl font-bold mb-1" style={{ color: "hsl(var(--admin-fg))" }}>{stat.value}</div>
@@ -43,7 +49,7 @@ export default function AdminDashboard() {
         {messages && messages.length > 0 ? (
           <div className="space-y-4">
             {messages.slice(0, 5).map((msg: any) => (
-              <div key={msg.id} className="flex items-start gap-4 pb-4 border-b" style={{ borderColor: "hsl(var(--admin-border))" }}>
+              <div key={msg.id} className="flex items-start gap-4 pb-4 border-b cursor-pointer hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors" style={{ borderColor: "hsl(var(--admin-border))" }} onClick={() => navigate("/admin/messages")}>
                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium" style={{ background: "hsl(var(--admin-muted))" }}>{msg.name.charAt(0)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">

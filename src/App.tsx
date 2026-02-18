@@ -7,6 +7,7 @@ import { AuthProvider, RequireAdmin } from "@/hooks/useAuth";
 import { ScrollToTop } from "@/components/ScrollToTop";
 
 import { FloatingContact } from "@/components/FloatingContact";
+import { LiveChat } from "@/components/LiveChat";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Portfolio from "./pages/Portfolio";
@@ -21,6 +22,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProfile from "./pages/admin/AdminProfile";
+import AdminPages from "./pages/admin/AdminPages";
 import AdminProjects from "./pages/admin/AdminProjects";
 import AdminServices from "./pages/admin/AdminServices";
 import AdminExperience from "./pages/admin/AdminExperience";
@@ -54,20 +56,21 @@ const App = () => (
           <ScrollToTop />
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<><Index /><FloatingContact /></>} />
-            <Route path="/about" element={<><About /><FloatingContact /></>} />
-            <Route path="/portfolio" element={<><Portfolio /><FloatingContact /></>} />
-            <Route path="/portfolio/:slug" element={<><ProjectDetail /><FloatingContact /></>} />
-            <Route path="/services" element={<><Services /><FloatingContact /></>} />
-            <Route path="/experience" element={<><Experience /><FloatingContact /></>} />
-            <Route path="/testimonials" element={<><Testimonials /><FloatingContact /></>} />
-            <Route path="/blog" element={<><Blog /><FloatingContact /></>} />
-            <Route path="/blog/:slug" element={<><BlogPost /><FloatingContact /></>} />
-            <Route path="/contact" element={<><Contact /><FloatingContact /></>} />
+            <Route path="/" element={<><Index /><FloatingContact /><LiveChat /></>} />
+            <Route path="/about" element={<><About /><FloatingContact /><LiveChat /></>} />
+            <Route path="/portfolio" element={<><Portfolio /><FloatingContact /><LiveChat /></>} />
+            <Route path="/portfolio/:slug" element={<><ProjectDetail /><FloatingContact /><LiveChat /></>} />
+            <Route path="/services" element={<><Services /><FloatingContact /><LiveChat /></>} />
+            <Route path="/experience" element={<><Experience /><FloatingContact /><LiveChat /></>} />
+            <Route path="/testimonials" element={<><Testimonials /><FloatingContact /><LiveChat /></>} />
+            <Route path="/blog" element={<><Blog /><FloatingContact /><LiveChat /></>} />
+            <Route path="/blog/:slug" element={<><BlogPost /><FloatingContact /><LiveChat /></>} />
+            <Route path="/contact" element={<><Contact /><FloatingContact /><LiveChat /></>} />
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLogin />} />
             <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
               <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="pages" element={<AdminPages />} />
               <Route path="profile" element={<AdminProfile />} />
               <Route path="projects" element={<AdminProjects />} />
               <Route path="services" element={<AdminServices />} />

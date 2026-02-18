@@ -1,1 +1,10 @@
 project_id = "eaafxtddtpjpmawoewxw"
+
+[functions.setup-admin]
+verify_jwt = false
+
+[functions.chat]
+verify_jwt = false
+
+[functions.generate-seo]
+verify_jwt = false

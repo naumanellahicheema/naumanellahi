@@ -29,6 +29,14 @@ async function streamChat({
 
   if (!resp.ok) {
     const data = await resp.json().catch(() => ({}));
+    if (resp.status === 429) {
+      onError("I'm getting a lot of questions right now! Please wait a moment and try again. 😊");
+      return;
+    }
+    if (resp.status === 402) {
+      onError("The AI service is temporarily unavailable. Please try the contact form instead!");
+      return;
+    }
     onError(data.error || "Something went wrong. Please try again.");
     return;
   }

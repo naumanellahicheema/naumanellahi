@@ -48,18 +48,43 @@ export default function AdminProjects() {
     }
   };
 
+  const refineScreenshot = async (url: string) => {
+    // Progressive retries so hero video/image gets time to paint.
+    const attempts = [1, 2, 3, 4];
+    for (const attempt of attempts) {
+      setShotStatus(`Capturing sharper hero screenshot (pass ${attempt}/${attempts.length})…`);
+      setShotProgress(Math.round((attempt / (attempts.length + 1)) * 100));
+      try {
+        const { data, error } = await supabase.functions.invoke("auto-fill-project", {
+          body: { mode: "screenshot", url, attempt },
+        });
+        if (!error && data?.screenshot) {
+          setEditing((prev: any) => prev ? { ...prev, thumbnail_url: data.screenshot } : prev);
+        }
+      } catch (_) { /* keep going */ }
+    }
+    setShotProgress(100);
+    setShotStatus("Screenshot ready — review and Save.");
+    setTimeout(() => { setShotProgress(0); setShotStatus(""); }, 2500);
+  };
+
   const handleAutoFill = async () => {
     const url = autoUrl.trim();
     if (!url) { toast({ title: "Enter a website URL first", variant: "destructive" }); return; }
     setAutoLoading(true);
+    setShotProgress(10);
+    setShotStatus("Scraping site & detecting tech stack…");
     try {
       const { data, error } = await supabase.functions.invoke("auto-fill-project", { body: { url } });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || "Failed to analyze site");
       setEditing((prev: any) => ({ ...(prev || emptyProject), ...data.data }));
-      toast({ title: "✨ Auto-filled from website!", description: "Review the fields and click Save." });
+      toast({ title: "✨ Auto-filled from website!", description: "Refining screenshot in background — you can edit fields meanwhile." });
+      // Progressive screenshot refinement runs after fields are populated.
+      await refineScreenshot(data.data?.website_url || url);
     } catch (e: any) {
       toast({ title: "Auto-fill failed", description: e.message || String(e), variant: "destructive" });
+      setShotProgress(0); setShotStatus("");
     } finally {
       setAutoLoading(false);
     }

@@ -39,6 +39,8 @@ export default function AdminProjects() {
       setAutoLoading(false);
     }
   };
+
+  const handleFieldChange = useCallback((field: string, value: any) => {
     setEditing((prev: any) => prev ? { ...prev, [field]: value } : null);
   }, []);
 

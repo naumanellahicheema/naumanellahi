@@ -20,9 +20,11 @@ export type Database = {
           id: string
           is_archived: boolean | null
           is_read: boolean | null
+          is_replied: boolean
           message: string
           name: string
           received_at: string
+          replied_at: string | null
           subject: string | null
         }
         Insert: {
@@ -30,9 +32,11 @@ export type Database = {
           id?: string
           is_archived?: boolean | null
           is_read?: boolean | null
+          is_replied?: boolean
           message: string
           name: string
           received_at?: string
+          replied_at?: string | null
           subject?: string | null
         }
         Update: {
@@ -40,9 +44,11 @@ export type Database = {
           id?: string
           is_archived?: boolean | null
           is_read?: boolean | null
+          is_replied?: boolean
           message?: string
           name?: string
           received_at?: string
+          replied_at?: string | null
           subject?: string | null
         }
         Relationships: []
@@ -337,6 +343,7 @@ export type Database = {
       }
       services: {
         Row: {
+          category: string | null
           created_at: string
           description: string | null
           display_order: number | null
@@ -349,6 +356,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           description?: string | null
           display_order?: number | null
@@ -361,6 +369,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           description?: string | null
           display_order?: number | null

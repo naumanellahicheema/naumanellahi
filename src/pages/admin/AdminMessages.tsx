@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useContactMessages, useUpdateContactMessage, useDeleteContactMessage } from "@/hooks/usePortfolioData";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, MailOpen, Trash2, Reply, Search, Inbox, Clock, User, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { Mail, MailOpen, Trash2, Reply, Search, Inbox, Clock, User, ChevronDown, ChevronUp, ExternalLink, CheckCircle2, Circle } from "lucide-react";
 
 export default function AdminMessages() {
   const { data: messages, isLoading } = useContactMessages();
@@ -9,12 +9,27 @@ export default function AdminMessages() {
   const deleteMessage = useDeleteContactMessage();
   const { toast } = useToast();
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
+  const [filter, setFilter] = useState<"all" | "unread" | "read" | "unreplied" | "replied">("all");
   const [search, setSearch] = useState("");
 
   const handleMarkRead = async (id: string, is_read: boolean) => {
     try {
       await updateMessage.mutateAsync({ id, is_read });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleToggleReplied = async (msg: any) => {
+    try {
+      const nextReplied = !msg.is_replied;
+      await updateMessage.mutateAsync({
+        id: msg.id,
+        is_replied: nextReplied,
+        replied_at: nextReplied ? new Date().toISOString() : null,
+        is_read: true,
+      });
+      toast({ title: nextReplied ? "Marked as replied" : "Marked as not replied" });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
@@ -33,6 +48,8 @@ export default function AdminMessages() {
   const filtered = messages?.filter((m: any) => {
     if (filter === "unread" && m.is_read) return false;
     if (filter === "read" && !m.is_read) return false;
+    if (filter === "unreplied" && m.is_replied) return false;
+    if (filter === "replied" && !m.is_replied) return false;
     if (search) {
       const s = search.toLowerCase();
       return m.name?.toLowerCase().includes(s) || m.email?.toLowerCase().includes(s) || m.subject?.toLowerCase().includes(s) || m.message?.toLowerCase().includes(s);
@@ -41,6 +58,7 @@ export default function AdminMessages() {
   });
 
   const unreadCount = messages?.filter((m: any) => !m.is_read).length || 0;
+  const unrepliedCount = messages?.filter((m: any) => !m.is_replied).length || 0;
   const totalCount = messages?.length || 0;
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-gray-800 rounded-full" /></div>;
@@ -67,7 +85,7 @@ export default function AdminMessages() {
             Inbox
           </h1>
           <p className="text-sm mt-1" style={{ color: "hsl(var(--admin-muted-fg))" }}>
-            {totalCount} messages • {unreadCount} unread
+            {totalCount} messages • {unreadCount} unread • {unrepliedCount} awaiting reply
           </p>
         </div>
       </div>
@@ -84,15 +102,21 @@ export default function AdminMessages() {
             className="admin-input-bordered pl-10 w-full"
           />
         </div>
-        <div className="flex gap-2">
-          {(["all", "unread", "read"] as const).map((f) => (
+        <div className="flex gap-2 flex-wrap">
+          {([
+            ["all", "All"],
+            ["unread", `Unread (${unreadCount})`],
+            ["read", "Read"],
+            ["unreplied", `To reply (${unrepliedCount})`],
+            ["replied", "Replied"],
+          ] as const).map(([f, label]) => (
             <button
               key={f}
-              onClick={() => setFilter(f)}
+              onClick={() => setFilter(f as any)}
               className={`px-4 py-2 text-sm rounded-lg transition-colors ${filter === f ? "bg-gray-900 text-white" : "bg-gray-100 hover:bg-gray-200"}`}
               style={filter === f ? {} : { color: "hsl(var(--admin-fg))" }}
             >
-              {f === "all" ? "All" : f === "unread" ? `Unread (${unreadCount})` : "Read"}
+              {label}
             </button>
           ))}
         </div>
@@ -126,7 +150,16 @@ export default function AdminMessages() {
                     <span className={`text-sm ${!msg.is_read ? "font-semibold" : "font-medium"}`} style={{ color: "hsl(var(--admin-fg))" }}>
                       {msg.name}
                     </span>
-                    {!msg.is_read && <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />}
+                    {!msg.is_read && <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" title="Unread" />}
+                    {msg.is_replied ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <CheckCircle2 size={10} /> Replied
+                      </span>
+                    ) : msg.is_read ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                        <Circle size={10} /> To reply
+                      </span>
+                    ) : null}
                   </div>
                   <p className="text-sm truncate" style={{ color: msg.subject ? "hsl(var(--admin-fg))" : "hsl(var(--admin-muted-fg))" }}>
                     {msg.subject || msg.message}
@@ -135,6 +168,18 @@ export default function AdminMessages() {
 
                 {/* Time & Actions */}
                 <div className="flex items-center gap-3 flex-shrink-0">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleToggleReplied(msg); }}
+                    className={`hidden sm:inline-flex items-center gap-1 px-2 py-1 text-[11px] rounded-md border transition-colors ${
+                      msg.is_replied
+                        ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                        : "bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
+                    }`}
+                    title={msg.is_replied ? "Mark as not replied" : "Mark as replied"}
+                  >
+                    {msg.is_replied ? <CheckCircle2 size={12} /> : <Circle size={12} />}
+                    {msg.is_replied ? "Replied" : "Mark replied"}
+                  </button>
                   <span className="text-xs" style={{ color: "hsl(var(--admin-muted-fg))" }}>
                     {formatTime(msg.received_at)}
                   </span>
@@ -171,6 +216,7 @@ export default function AdminMessages() {
                     <div className="flex items-center gap-2">
                       <a
                         href={`mailto:${msg.email}?subject=Re: ${msg.subject || "Your inquiry"}`}
+                        onClick={() => handleToggleReplied({ ...msg, is_replied: false })}
                         className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
                       >
                         <Reply size={14} /> Reply

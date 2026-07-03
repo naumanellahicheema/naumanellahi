@@ -57,7 +57,7 @@ export default function AdminServices() {
   };
 
   const startNew = () => {
-    setEditing({ title: "", description: "", short_description: "", icon: "Code", highlights: [], display_order: 0, published: true });
+    setEditing({ title: "", description: "", short_description: "", icon: "Code", category: "", highlights: [], display_order: 0, published: true });
     setIsNew(true);
   };
 
@@ -106,6 +106,22 @@ export default function AdminServices() {
                     <option key={icon} value={icon}>{icon}</option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="admin-label">Category</label>
+                <input
+                  type="text"
+                  value={editing.category || ""}
+                  onChange={(e) => handleFieldChange("category", e.target.value)}
+                  className="admin-input"
+                  placeholder="e.g. Web Apps, SEO, Design — used for filtering on the Services page"
+                  list="service-category-suggestions"
+                />
+                <datalist id="service-category-suggestions">
+                  {Array.from(new Set((services || []).map((s: any) => s.category).filter(Boolean))).map((c: any) => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
               </div>
               <div>
                 <label className="admin-label">Short Description</label>
@@ -183,7 +199,9 @@ export default function AdminServices() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg" style={{ color: "hsl(var(--admin-fg))" }}>{s.title}</h3>
-                  <p className="text-sm" style={{ color: "hsl(var(--admin-muted-fg))" }}>Order: {s.display_order}</p>
+                  <p className="text-sm" style={{ color: "hsl(var(--admin-muted-fg))" }}>
+                    {s.category ? `${s.category} · ` : ""}Order: {s.display_order}
+                  </p>
                 </div>
               </div>
               

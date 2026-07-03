@@ -1,11 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Layout } from "@/components/layout/Layout";
 import { useServices, useProjects, useTestimonials } from "@/hooks/usePortfolioData";
 import {
   Code, Layout as LayoutIcon, Zap, Globe, Palette, Building, Search, Star,
-  ArrowRight, ArrowUpRight, Shield, Database, Settings, CheckCircle, Sparkles,
+  ArrowRight, ArrowUpRight, Shield, Database, Settings, CheckCircle, Sparkles, X,
 } from "lucide-react";
 
 const iconMap: Record<string, any> = { Code, Layout: LayoutIcon, Zap, Globe, Palette, Building, Search, Star, Shield, Database, Settings, Sparkles };
@@ -23,10 +23,33 @@ export default function Services() {
   const { data: projects } = useProjects();
   const { data: testimonials } = useTestimonials({ limit: 1 });
 
+  const [query, setQuery] = useState("");
+  const [activeCat, setActiveCat] = useState<string>("all");
+
   const list = services || [];
-  const primary = list[0];
-  const rest = list.slice(1);
   const shippedCount = projects?.length || 0;
+
+  const categories = useMemo(
+    () => ["all", ...Array.from(new Set(list.map((s: any) => s.category).filter(Boolean)))],
+    [list]
+  );
+
+  const filtered = useMemo(() => {
+    let out = list;
+    if (activeCat !== "all") out = out.filter((s: any) => s.category === activeCat);
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      out = out.filter((s: any) =>
+        [s.title, s.short_description, s.description, s.category, ...((s.highlights as string[]) || [])]
+          .filter(Boolean)
+          .some((v: string) => String(v).toLowerCase().includes(q))
+      );
+    }
+    return out;
+  }, [list, activeCat, query]);
+
+  const primary = filtered[0] || list[0];
+  const rest = (filtered[0] ? filtered.slice(1) : list.slice(1));
 
   const industries = useMemo(
     () => Array.from(new Set((projects || []).map((p: any) => p.industry).filter(Boolean))),
@@ -78,6 +101,60 @@ export default function Services() {
         </div>
       </section>
 
+      {/* ── Filter + Search ──────────────────────── */}
+      <section className="editorial-container pb-6">
+        <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between border border-foreground/10 rounded-2xl p-4 bg-background">
+          <div className="relative flex-1 lg:max-w-md">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search services, capabilities, tech…"
+              className="w-full pl-11 pr-10 py-2.5 rounded-xl bg-foreground/[0.03] border border-transparent focus:border-foreground/20 focus:bg-background outline-none text-sm transition"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-foreground/10 transition"
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((c) => (
+              <button
+                key={c}
+                onClick={() => setActiveCat(c)}
+                className={`px-3 py-1.5 rounded-full border text-[11px] font-mono uppercase tracking-widest transition ${
+                  activeCat === c
+                    ? "bg-foreground text-background border-foreground"
+                    : "border-foreground/15 text-foreground/70 hover:border-foreground/40"
+                }`}
+              >
+                {c === "all" ? `All (${list.length})` : c}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-3 text-[11px] font-mono uppercase tracking-widest text-foreground/50">
+          {filtered.length} result{filtered.length === 1 ? "" : "s"}
+          {query && ` for "${query}"`}
+          {activeCat !== "all" && ` in ${activeCat}`}
+        </div>
+      </section>
+
+      {filtered.length === 0 && (
+        <section className="editorial-container pb-12">
+          <div className="border border-dashed border-foreground/15 rounded-2xl p-16 text-center text-foreground/50">
+            <Sparkles size={22} className="mx-auto mb-3" />
+            No services match. Try a different keyword or clear the filter.
+          </div>
+        </section>
+      )}
+
       {/* ── Primary service spotlight ─────────────── */}
       {primary && (
         <section className="editorial-section editorial-container rule-top">
@@ -89,7 +166,9 @@ export default function Services() {
             className="grid grid-cols-1 lg:grid-cols-12 gap-8 border border-foreground/15 rounded-3xl overflow-hidden bg-background"
           >
             <div className="lg:col-span-7 p-8 sm:p-12">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-foreground/50 mb-4">Track 01 · Flagship</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-foreground/50 mb-4">
+                Track 01 · Flagship{primary.category ? ` · ${primary.category}` : ""}
+              </div>
               <h2 className="display-h2 text-3xl sm:text-4xl md:text-5xl mb-5 leading-tight">
                 {primary.title}
               </h2>
@@ -179,6 +258,9 @@ export default function Services() {
                       <div className="w-9 h-9 rounded-lg bg-foreground/5 flex items-center justify-center"><Icon size={16} /></div>
                       <h3 className="font-display text-xl sm:text-2xl">{s.title}</h3>
                     </div>
+                    {s.category && (
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-foreground/50 mb-2">{s.category}</div>
+                    )}
                     <p className="text-sm text-foreground/60 leading-relaxed">{s.short_description || s.description}</p>
                   </div>
                   <div className="col-span-12 sm:col-span-5">

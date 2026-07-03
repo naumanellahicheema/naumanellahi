@@ -2,25 +2,27 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 
-// Real-time subscription hook
+// Real-time subscription hook — registers postgres_changes callback BEFORE
+// calling .subscribe() (required by supabase-js), and uses a unique per-mount
+// channel name to avoid duplicate-callback errors.
 export function useRealtimeSubscription(table: string, queryKey: (string | object | undefined)[]) {
   const queryClient = useQueryClient();
-  
+  const keyStr = JSON.stringify(queryKey);
+
   useEffect(() => {
-    const channel = supabase.channel(
-      `${table}-changes-${JSON.stringify(queryKey)}-${Math.random().toString(36).slice(2)}`
-    );
-    channel.on(
-      'postgres_changes' as any,
-      { event: '*', schema: 'public', table },
-      () => {
-        queryClient.invalidateQueries({ queryKey });
-      }
-    );
-    channel.subscribe();
+    const channelName = `rt-${table}-${Math.random().toString(36).slice(2)}-${Date.now()}`;
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes' as any,
+        { event: '*', schema: 'public', table },
+        () => { queryClient.invalidateQueries({ queryKey }); }
+      )
+      .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [table, queryClient, JSON.stringify(queryKey)]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [table, keyStr, queryClient]);
 }
 
 // Profile

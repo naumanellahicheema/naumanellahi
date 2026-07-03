@@ -1,11 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Layout } from "@/components/layout/Layout";
 import { useServices, useProjects, useTestimonials } from "@/hooks/usePortfolioData";
 import {
   Code, Layout as LayoutIcon, Zap, Globe, Palette, Building, Search, Star,
-  ArrowRight, ArrowUpRight, Shield, Database, Settings, CheckCircle, Sparkles,
+  ArrowRight, ArrowUpRight, Shield, Database, Settings, CheckCircle, Sparkles, X,
 } from "lucide-react";
 
 const iconMap: Record<string, any> = { Code, Layout: LayoutIcon, Zap, Globe, Palette, Building, Search, Star, Shield, Database, Settings, Sparkles };
@@ -23,10 +23,33 @@ export default function Services() {
   const { data: projects } = useProjects();
   const { data: testimonials } = useTestimonials({ limit: 1 });
 
+  const [query, setQuery] = useState("");
+  const [activeCat, setActiveCat] = useState<string>("all");
+
   const list = services || [];
-  const primary = list[0];
-  const rest = list.slice(1);
   const shippedCount = projects?.length || 0;
+
+  const categories = useMemo(
+    () => ["all", ...Array.from(new Set(list.map((s: any) => s.category).filter(Boolean)))],
+    [list]
+  );
+
+  const filtered = useMemo(() => {
+    let out = list;
+    if (activeCat !== "all") out = out.filter((s: any) => s.category === activeCat);
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      out = out.filter((s: any) =>
+        [s.title, s.short_description, s.description, s.category, ...((s.highlights as string[]) || [])]
+          .filter(Boolean)
+          .some((v: string) => String(v).toLowerCase().includes(q))
+      );
+    }
+    return out;
+  }, [list, activeCat, query]);
+
+  const primary = filtered[0] || list[0];
+  const rest = (filtered[0] ? filtered.slice(1) : list.slice(1));
 
   const industries = useMemo(
     () => Array.from(new Set((projects || []).map((p: any) => p.industry).filter(Boolean))),

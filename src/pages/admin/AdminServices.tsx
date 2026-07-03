@@ -122,6 +122,7 @@ export default function AdminServices() {
                     <option key={c} value={c} />
                   ))}
                 </datalist>
+              </div>
               <div>
                 <label className="admin-label">Short Description</label>
                 <input

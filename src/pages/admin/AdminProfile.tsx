@@ -117,13 +117,10 @@ export default function AdminProfile() {
               <label className="admin-label">Professional Title</label>
               <input type="text" value={form.title || ""} onChange={(e) => setForm({ ...form, title: e.target.value })} className="admin-input-bordered" placeholder="e.g. Senior Frontend Developer" />
             </div>
-            <div>
-              <label className="admin-label">Email Address</label>
-              <input type="email" value={form.email || ""} onChange={(e) => setForm({ ...form, email: e.target.value })} className="admin-input-bordered" placeholder="your@email.com" />
-            </div>
-            <div>
-              <label className="admin-label">Phone Number</label>
-              <input type="text" value={form.phone || ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="admin-input-bordered" placeholder="+1 234 567 890" />
+            <div className="md:col-span-2">
+              <p className="text-xs" style={{ color: "hsl(var(--admin-muted-fg))" }}>
+                📧 Email &amp; 📞 phone are managed in <strong>Site Settings → Contact</strong> (kept out of the profile for security).
+              </p>
             </div>
           </div>
         </div>

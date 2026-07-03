@@ -22,6 +22,29 @@ export default function AdminProjects() {
   const [isNew, setIsNew] = useState(false);
   const [autoUrl, setAutoUrl] = useState("");
   const [autoLoading, setAutoLoading] = useState(false);
+  const [refineText, setRefineText] = useState("");
+  const [refineLoading, setRefineLoading] = useState(false);
+
+  const handleRefine = async () => {
+    const instructions = refineText.trim();
+    if (!instructions) { toast({ title: "Type your suggestions first", variant: "destructive" }); return; }
+    if (!editing) return;
+    setRefineLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-fill-project", {
+        body: { mode: "refine", current: editing, instructions },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Refine failed");
+      setEditing((prev: any) => ({ ...(prev || {}), ...data.data }));
+      setRefineText("");
+      toast({ title: "✨ Fields updated by AI", description: "Review the changes and Save." });
+    } catch (e: any) {
+      toast({ title: "Refine failed", description: e.message || String(e), variant: "destructive" });
+    } finally {
+      setRefineLoading(false);
+    }
+  };
 
   const handleAutoFill = async () => {
     const url = autoUrl.trim();
@@ -121,6 +144,30 @@ export default function AdminProjects() {
                 </div>
                 <p className="text-xs mt-2" style={{ color: "hsl(var(--admin-muted-fg))" }}>
                   Paste any live project URL. AI will scrape the site, capture a hero screenshot, and fill every field below. Review and Save.
+                </p>
+              </div>
+              <div className="rounded-xl p-4" style={{ background: "hsl(var(--admin-muted))", border: "2px dashed hsl(var(--admin-border))" }}>
+                <label className="admin-label flex items-center gap-2"><Sparkles size={14} /> Refine with AI — suggest edits or fix errors</label>
+                <textarea
+                  value={refineText}
+                  onChange={(e) => setRefineText(e.target.value)}
+                  placeholder="e.g. Make the description more concise, fix grammar, change industry to Healthcare, add Next.js to tech stack, rewrite title to be catchier…"
+                  className="admin-input-bordered resize-none w-full mt-2"
+                  rows={3}
+                  disabled={refineLoading}
+                />
+                <div className="flex justify-end mt-2">
+                  <button
+                    type="button"
+                    onClick={handleRefine}
+                    disabled={refineLoading || !refineText.trim()}
+                    className="admin-btn-bordered"
+                  >
+                    {refineLoading ? <><Loader2 size={16} className="animate-spin" /> Applying…</> : <><Sparkles size={16} /> Apply AI Edits</>}
+                  </button>
+                </div>
+                <p className="text-xs mt-2" style={{ color: "hsl(var(--admin-muted-fg))" }}>
+                  AI reads your current fields + instructions, fixes grammar/spelling, and applies every requested change.
                 </p>
               </div>
               <div><label className="admin-label">Thumbnail</label><ImageUpload value={editing.thumbnail_url} onChange={(url) => handleFieldChange("thumbnail_url", url)} onRemove={() => handleFieldChange("thumbnail_url", "")} folder="projects" /></div>

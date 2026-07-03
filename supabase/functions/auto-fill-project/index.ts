@@ -26,7 +26,26 @@ function slugify(s: string) {
 }
 
 async function fetchMicrolink(url: string) {
-  const api = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=true&palette=false&audio=false&video=false&viewport.width=1440&viewport.height=900&screenshot.type=jpeg&screenshot.fullPage=false`;
+  // waitUntil=networkidle + waitFor delay ensures hero video/image loads before capture.
+  // viewport matches a standard desktop; clip to top 900px = header + hero only.
+  const params = new URLSearchParams({
+    url,
+    screenshot: "true",
+    meta: "true",
+    palette: "false",
+    audio: "false",
+    video: "false",
+    "viewport.width": "1440",
+    "viewport.height": "900",
+    "viewport.deviceScaleFactor": "2",
+    "screenshot.type": "jpeg",
+    "screenshot.fullPage": "false",
+    "screenshot.overlay.browser": "false",
+    waitUntil: "networkidle0",
+    waitFor: "4500",
+    device: "macbook pro 15",
+  });
+  const api = `https://api.microlink.io/?${params.toString()}`;
   const r = await fetch(api);
   const j = await r.json().catch(() => ({}));
   if (j?.status !== "success") return { screenshot: null, meta: {} };
@@ -61,7 +80,7 @@ async function fetchPageText(url: string): Promise<string> {
   }
 }
 
-async function callOllama(prompt: string): Promise<any> {
+async function callOllama(system: string, user: string): Promise<any> {
   const res = await fetch(OLLAMA_URL, {
     method: "POST",
     headers: {
@@ -73,12 +92,8 @@ async function callOllama(prompt: string): Promise<any> {
       stream: false,
       format: "json",
       messages: [
-        {
-          role: "system",
-          content:
-            "You are an expert web analyst. Given a website's scraped text and metadata, produce a strict JSON object describing the project for a portfolio. Return ONLY valid JSON — no prose, no markdown.",
-        },
-        { role: "user", content: prompt },
+        { role: "system", content: system },
+        { role: "user", content: user },
       ],
       options: { temperature: 0.3 },
     }),
@@ -92,7 +107,6 @@ async function callOllama(prompt: string): Promise<any> {
   try {
     return JSON.parse(content);
   } catch {
-    // try to extract JSON substring
     const m = content.match(/\{[\s\S]*\}/);
     return m ? JSON.parse(m[0]) : {};
   }
@@ -109,7 +123,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Auth + admin check
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -140,6 +153,46 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
+    const mode: "scrape" | "refine" = body?.mode === "refine" ? "refine" : "scrape";
+
+    // ------- REFINE MODE: user gives instructions, AI edits current fields -------
+    if (mode === "refine") {
+      const current = body?.current || {};
+      const instructions: string = String(body?.instructions || "").trim();
+      if (!instructions) {
+        return new Response(JSON.stringify({ error: "Missing 'instructions'" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const system =
+        "You are an expert portfolio editor. You receive the CURRENT project fields as JSON and a user's natural-language instructions (may include grammar/spelling fixes, tone changes, factual corrections, additions). Return the FULL updated JSON with the same keys, applying every requested change and fixing any obvious grammar/spelling/casing/formatting errors. Preserve keys and types. Return ONLY valid JSON.";
+      const user = `CURRENT FIELDS:
+${JSON.stringify(current, null, 2)}
+
+USER INSTRUCTIONS:
+"""
+${instructions}
+"""
+
+Return the SAME JSON object with all requested edits applied. Keys to preserve:
+title, slug, short_description, description, industry, country, website_url, thumbnail_url, tech_stack (array), services_provided (array), featured (boolean), published (boolean), status.`;
+      const ai = await callOllama(system, user);
+      const merged = {
+        ...current,
+        ...ai,
+        tech_stack: Array.isArray(ai.tech_stack) ? ai.tech_stack.slice(0, 12).map(String) : current.tech_stack || [],
+        services_provided: Array.isArray(ai.services_provided) ? ai.services_provided.slice(0, 10).map(String) : current.services_provided || [],
+        featured: typeof ai.featured === "boolean" ? ai.featured : Boolean(current.featured),
+        published: typeof ai.published === "boolean" ? ai.published : current.published !== false,
+      };
+      return new Response(JSON.stringify({ success: true, data: merged }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ------- SCRAPE MODE -------
     let url: string = (body?.url || "").trim();
     if (!url) {
       return new Response(JSON.stringify({ error: "Missing 'url'" }), {
@@ -149,9 +202,10 @@ Deno.serve(async (req) => {
     }
     if (!/^https?:\/\//i.test(url)) url = "https://" + url;
 
-    // Parallel fetch: screenshot+meta + full page text
     const [ml, pageText] = await Promise.all([fetchMicrolink(url), fetchPageText(url)]);
 
+    const system =
+      "You are an expert web analyst. Given a website's scraped text and metadata, produce a strict JSON object describing the project for a portfolio. Return ONLY valid JSON — no prose, no markdown.";
     const prompt = `Analyze this website and extract portfolio project details.
 
 URL: ${url}
@@ -172,17 +226,13 @@ Return a JSON object with EXACTLY these keys:
   "description": "3-5 paragraph rich description of what the site/product does, its audience, and notable features. Written in third person.",
   "industry": "single industry label e.g. E-commerce, SaaS, Healthcare, Real Estate, Education, Finance, Agency, Portfolio, Media",
   "country": "best-guess country of the business (full name) or empty string",
-  "tech_stack": ["array","of","detected","technologies (WordPress, React, Shopify, Tailwind, Next.js, WooCommerce, Elementor, etc.) — 3 to 8 items"],
-  "services_provided": ["array of services likely delivered for this project — e.g. Web Design, Web Development, SEO, E-commerce Setup, Performance Optimization, Custom Theme — 3 to 6 items"],
+  "tech_stack": ["3 to 8 detected technologies"],
+  "services_provided": ["3 to 6 likely services"],
   "featured": false
 }
+Output ONLY JSON.`;
 
-Rules:
-- Output ONLY JSON, no markdown fences, no commentary.
-- Never invent URLs or fake facts. If unsure, keep the string empty or the array short.
-- tech_stack must be plausible based on page hints (generator meta, frameworks, CMS signatures) or best guess from content.`;
-
-    const ai = await callOllama(prompt);
+    const ai = await callOllama(system, prompt);
 
     const title = String(ai.title || ml.meta.title || "").trim();
     const result = {

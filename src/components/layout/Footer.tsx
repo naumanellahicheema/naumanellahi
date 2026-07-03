@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
-import { Mail, Phone, MapPin, ArrowUp, Github, Linkedin, Twitter, Instagram, Youtube } from "lucide-react";
+import { Mail, MessageCircle, Github, Linkedin, Twitter, Instagram, Youtube, ArrowUpRight } from "lucide-react";
 import { useSiteSettings, useProfile } from "@/hooks/usePortfolioData";
-import { motion } from "framer-motion";
 
 const socialIcons: Record<string, any> = { github: Github, linkedin: Linkedin, twitter: Twitter, instagram: Instagram, youtube: Youtube };
 
@@ -9,144 +8,168 @@ export function Footer() {
   const { data: settings } = useSiteSettings();
   const { data: profile } = useProfile();
 
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  const siteName = settings?.site_name || "Nauman Ellahi";
+  const tagline = settings?.tagline || "Building secure web apps that drive real results.";
+  const email = settings?.contact_email || profile?.email || "hello@example.com";
+  const location = profile?.location || "Pakistan";
+  const year = new Date().getFullYear();
+  const hostLabel = (settings?.site_url || "naumanellahi.com").replace(/^https?:\/\//, "").replace(/\/$/, "").toUpperCase();
 
-  const socialLinks = settings?.social_links as Record<string, string> || {};
-  const hasSocialLinks = Object.values(socialLinks).some(url => url && url.trim());
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0 }
-  };
+  const socialLinks = (settings?.social_links as Record<string, string>) || {};
+  const activeSocials = Object.entries(socialLinks).filter(([, url]) => url && url.trim());
 
   return (
-    <footer className="bg-card border-t border-border/50">
-      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-        <motion.div 
-          className="py-12 sm:py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 sm:gap-12"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-        >
+    <footer className="relative border-t border-foreground/10 bg-background overflow-hidden">
+      <div className="editorial-container pt-16 sm:pt-20 pb-8">
+        {/* Section marker */}
+        <div className="flex items-center gap-4 text-[11px] font-mono uppercase tracking-widest text-foreground/50 mb-14">
+          <span className="w-14 h-px bg-foreground/20" />
+          <span>§12 — End of page</span>
+          <span className="flex-1 h-px bg-foreground/10" />
+          <span className="hidden sm:inline">// {hostLabel}</span>
+        </div>
+
+        {/* Main grid */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8">
           {/* Brand */}
-          <motion.div variants={itemVariants} className="sm:col-span-2 lg:col-span-1">
-            <Link to="/" className="text-xl sm:text-2xl font-display font-bold text-foreground">
-              {settings?.site_name || "Nauman Ellahi"}
+          <div className="md:col-span-4">
+            <Link to="/" className="inline-flex items-center gap-3 mb-6 group">
+              <span className="relative w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center font-display font-bold text-lg">
+                {siteName.charAt(0).toUpperCase()}
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-orange-400 border-2 border-background" />
+              </span>
+              <span className="font-display text-xl font-bold tracking-tight">{siteName}</span>
             </Link>
-            <p className="mt-4 text-sm sm:text-base text-muted-foreground leading-relaxed">
-              {settings?.tagline || "Building secure web apps with powerful admin panels."}
+            <p className="text-foreground/60 leading-relaxed max-w-sm mb-8">
+              {tagline}
             </p>
-            {/* Social Icons */}
-            {hasSocialLinks && (
-              <div className="flex gap-3 mt-6">
-                {Object.entries(socialLinks).map(([platform, url]) => {
-                  if (!url) return null;
-                  const Icon = socialIcons[platform] || null;
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-foreground/15 text-[11px] font-mono uppercase tracking-widest text-foreground/70">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Open · Accepting briefs
+            </span>
+          </div>
+
+          {/* Index */}
+          <FooterCol number="01" section="Index" heading="Quick Links">
+            <FooterLink to="/portfolio">Portfolio</FooterLink>
+            <FooterLink to="/services">Services</FooterLink>
+            <FooterLink to="/testimonials">Reviews</FooterLink>
+            <FooterLink to="/about">About</FooterLink>
+            <FooterLink to="/blog">Journal</FooterLink>
+          </FooterCol>
+
+          {/* Legal */}
+          <FooterCol number="02" section="Legal" heading="Legal">
+            <FooterLink to="/privacy">Privacy Policy</FooterLink>
+            <FooterLink to="/terms">Terms of Service</FooterLink>
+          </FooterCol>
+
+          {/* Reach */}
+          <FooterCol number="03" section="Reach" heading="Contact">
+            <a
+              href={`mailto:${email}`}
+              className="group flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors"
+            >
+              <Mail size={14} className="flex-shrink-0 text-foreground/40 group-hover:text-foreground transition-colors" />
+              <span className="truncate">{email}</span>
+            </a>
+            <Link
+              to="/contact"
+              className="group flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors"
+            >
+              <MessageCircle size={14} className="flex-shrink-0 text-foreground/40 group-hover:text-foreground transition-colors" />
+              <span>Live Chat</span>
+            </Link>
+            {activeSocials.length > 0 && (
+              <div className="pt-4 mt-2 border-t border-foreground/10 flex flex-wrap gap-2">
+                {activeSocials.map(([platform, url]) => {
+                  const Icon = socialIcons[platform.toLowerCase()];
                   return (
-                    <a 
-                      key={platform} 
-                      href={url} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-all tap-target hover:-translate-y-1" 
+                    <a
+                      key={platform}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       title={platform}
+                      className="w-9 h-9 rounded-full border border-foreground/15 flex items-center justify-center text-foreground/60 hover:text-foreground hover:border-foreground/40 transition"
                     >
-                      {Icon ? <Icon size={18} /> : <span className="text-xs font-medium uppercase">{platform[0]}</span>}
+                      {Icon ? <Icon size={14} /> : <span className="text-[10px] uppercase font-mono">{platform[0]}</span>}
                     </a>
                   );
                 })}
               </div>
             )}
-          </motion.div>
+          </FooterCol>
+        </div>
 
-          {/* Quick Links */}
-          <motion.div variants={itemVariants}>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-5 sm:mb-6">Quick Links</h4>
-            <ul className="space-y-3">
-              {[
-                { href: "/", label: "Home" },
-                { href: "/about", label: "About" },
-                { href: "/portfolio", label: "Portfolio" },
-                { href: "/services", label: "Services" },
-                { href: "/contact", label: "Contact" }
-              ].map((link) => (
-                <li key={link.href}>
-                  <Link 
-                    to={link.href} 
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors tap-target inline-block"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* Services */}
-          <motion.div variants={itemVariants}>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-5 sm:mb-6">Services</h4>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li>Secure Web Apps</li>
-              <li>Admin Dashboards</li>
-              <li>Database Design</li>
-              <li>Performance Optimization</li>
-            </ul>
-          </motion.div>
-
-          {/* Contact */}
-          <motion.div variants={itemVariants}>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-5 sm:mb-6">Contact</h4>
-            <ul className="space-y-4">
-              <li className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Mail size={16} className="flex-shrink-0" />
-                <a 
-                  href={`mailto:${settings?.contact_email || profile?.email}`} 
-                  className="hover:text-foreground transition-colors truncate"
-                >
-                  {settings?.contact_email || profile?.email || "naumancheema643@gmail.com"}
-                </a>
-              </li>
-              <li className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Phone size={16} className="flex-shrink-0" />
-                <a 
-                  href={`tel:${settings?.contact_phone || profile?.phone}`} 
-                  className="hover:text-foreground transition-colors"
-                >
-                  {settings?.contact_phone || profile?.phone || "+923331401384"}
-                </a>
-              </li>
-              <li className="flex items-center gap-3 text-sm text-muted-foreground">
-                <MapPin size={16} className="flex-shrink-0" />
-                <span>{profile?.location || "Pakistan"}</span>
-              </li>
-            </ul>
-          </motion.div>
-        </motion.div>
-
-        <div className="py-6 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
-            {settings?.footer_text || `© ${new Date().getFullYear()} Nauman Ellahi. All rights reserved.`}
+        {/* Meta strip */}
+        <div className="mt-16 pt-6 border-t border-foreground/10 grid grid-cols-1 sm:grid-cols-3 gap-4 text-[11px] font-mono uppercase tracking-widest text-foreground/50">
+          <p>
+            © 2018 — {year} {siteName}. All rights reserved.
           </p>
-          <motion.button 
-            onClick={scrollToTop} 
-            className="p-3 rounded-full bg-secondary hover:bg-accent transition-all tap-target hover:-translate-y-1"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            aria-label="Scroll to top"
-          >
-            <ArrowUp size={18} />
-          </motion.button>
+          <p className="sm:text-center">v 4.0 — {year}</p>
+          <p className="sm:text-right flex items-center gap-1 sm:justify-end">
+            Built with intent · Remote · {location}
+            <ArrowUpRight size={12} className="opacity-60" />
+          </p>
+        </div>
+      </div>
+
+      {/* Giant wordmark */}
+      <div
+        aria-hidden="true"
+        className="relative overflow-hidden select-none pointer-events-none"
+      >
+        <div
+          className="whitespace-nowrap text-center font-display font-black tracking-tighter leading-[0.85] pb-2"
+          style={{
+            fontSize: "clamp(6rem, 22vw, 22rem)",
+            background: "linear-gradient(180deg, hsl(var(--foreground) / 0.08) 0%, hsl(var(--foreground) / 0) 90%)",
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            color: "transparent",
+          }}
+        >
+          {siteName}
         </div>
       </div>
     </footer>
+  );
+}
+
+function FooterCol({
+  number,
+  section,
+  heading,
+  children,
+}: {
+  number: string;
+  section: string;
+  heading: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 md:[&:nth-child(2)]:col-span-3 md:[&:nth-child(3)]:col-span-2 md:[&:nth-child(4)]:col-span-3">
+      <div className="text-[11px] font-mono uppercase tracking-widest text-foreground/40 mb-4">
+        {number} / {section}
+      </div>
+      <h4 className="font-display font-bold text-lg mb-5">{heading}</h4>
+      <ul className="space-y-3 text-sm">
+        {Array.isArray(children)
+          ? children.map((child, i) => <li key={i}>{child}</li>)
+          : <li>{children}</li>}
+      </ul>
+    </div>
+  );
+}
+
+function FooterLink({ to, children }: { to: string; children: React.ReactNode }) {
+  return (
+    <Link
+      to={to}
+      className="text-foreground/70 hover:text-foreground transition-colors inline-block"
+    >
+      {children}
+    </Link>
   );
 }

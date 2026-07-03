@@ -372,7 +372,7 @@ async function fetchMicrolink(url: string, waitMs = 3000) {
   }
 }
 
-}
+
 
 async function fetchRawHtml(url: string): Promise<{ html: string; headers: Headers }> {
   try {

@@ -25,9 +25,36 @@ function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80);
 }
 
+// Constrain a list to the allowed catalog (case-insensitive, keeps canonical casing).
+function constrainToCatalog(list: unknown, catalog: string[]): string[] {
+  if (!Array.isArray(list) || catalog.length === 0) return [];
+  const map = new Map(catalog.map((c) => [c.toLowerCase().trim(), c]));
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of list) {
+    const key = String(raw || "").toLowerCase().trim();
+    if (!key) continue;
+    const canonical = map.get(key);
+    if (canonical && !seen.has(canonical)) {
+      out.push(canonical);
+      seen.add(canonical);
+    }
+  }
+  return out.slice(0, 8);
+}
+
 async function fetchMicrolink(url: string) {
-  // waitUntil=networkidle + waitFor delay ensures hero video/image loads before capture.
-  // viewport matches a standard desktop; clip to top 900px = header + hero only.
+  // Long wait + scroll script so hero video/image + lazy backgrounds finish loading.
+  const scrollScript = `async () => {
+    await new Promise(r => setTimeout(r, 800));
+    window.scrollTo(0, 200);
+    await new Promise(r => setTimeout(r, 400));
+    window.scrollTo(0, 0);
+    // Force any <video> in hero to play so first frame paints
+    document.querySelectorAll('video').forEach(v => { try { v.muted = true; v.play().catch(()=>{}); } catch(_) {} });
+    // Wait for background images / videos
+    await new Promise(r => setTimeout(r, 4500));
+  }`;
   const params = new URLSearchParams({
     url,
     screenshot: "true",
@@ -41,9 +68,11 @@ async function fetchMicrolink(url: string) {
     "screenshot.type": "jpeg",
     "screenshot.fullPage": "false",
     "screenshot.overlay.browser": "false",
+    "screenshot.waitFor": "3000",
     waitUntil: "networkidle0",
-    waitFor: "4500",
+    waitFor: "8000",
     device: "macbook pro 15",
+    scripts: scrollScript,
   });
   const api = `https://api.microlink.io/?${params.toString()}`;
   const r = await fetch(api);
@@ -74,7 +103,7 @@ async function fetchPageText(url: string): Promise<string> {
       signal: AbortSignal.timeout(15000),
     });
     const html = await r.text();
-    return stripHtml(html).slice(0, 15000);
+    return stripHtml(html).slice(0, 18000);
   } catch (_) {
     return "";
   }
@@ -95,7 +124,7 @@ async function callOllama(system: string, user: string): Promise<any> {
         { role: "system", content: system },
         { role: "user", content: user },
       ],
-      options: { temperature: 0.3 },
+      options: { temperature: 0.15 },
     }),
   });
   if (!res.ok) {
@@ -152,10 +181,26 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Load MY services catalog — services_provided must come only from this list.
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { data: svcRows } = await admin
+      .from("services")
+      .select("title, category, short_description")
+      .eq("published", true);
+    const serviceCatalog: string[] = (svcRows || [])
+      .map((s: any) => String(s.title || "").trim())
+      .filter(Boolean);
+    const catalogDetail = (svcRows || [])
+      .map((s: any) => `- ${s.title}${s.category ? ` [${s.category}]` : ""}${s.short_description ? `: ${s.short_description}` : ""}`)
+      .join("\n");
+
     const body = await req.json().catch(() => ({}));
     const mode: "scrape" | "refine" = body?.mode === "refine" ? "refine" : "scrape";
 
-    // ------- REFINE MODE: user gives instructions, AI edits current fields -------
+    // ------- REFINE MODE -------
     if (mode === "refine") {
       const current = body?.current || {};
       const instructions: string = String(body?.instructions || "").trim();
@@ -166,8 +211,11 @@ Deno.serve(async (req) => {
         });
       }
       const system =
-        "You are an expert portfolio editor. You receive the CURRENT project fields as JSON and a user's natural-language instructions (may include grammar/spelling fixes, tone changes, factual corrections, additions). Return the FULL updated JSON with the same keys, applying every requested change and fixing any obvious grammar/spelling/casing/formatting errors. Preserve keys and types. Return ONLY valid JSON.";
-      const user = `CURRENT FIELDS:
+        "You are an expert portfolio editor. You receive the CURRENT project fields as JSON, a user's natural-language instructions, and a fixed catalog of MY OWN services. Apply every requested change, fix grammar/spelling/casing/formatting, and return the FULL updated JSON with the same keys. HARD RULE: `services_provided` MUST contain only exact strings from the provided MY_SERVICES list (never invent new ones, never copy services from the client's website). Return ONLY valid JSON.";
+      const user = `MY_SERVICES (the ONLY allowed values for services_provided):
+${catalogDetail || "(none configured — leave services_provided as an empty array)"}
+
+CURRENT FIELDS:
 ${JSON.stringify(current, null, 2)}
 
 USER INSTRUCTIONS:
@@ -175,14 +223,13 @@ USER INSTRUCTIONS:
 ${instructions}
 """
 
-Return the SAME JSON object with all requested edits applied. Keys to preserve:
-title, slug, short_description, description, industry, country, website_url, thumbnail_url, tech_stack (array), services_provided (array), featured (boolean), published (boolean), status.`;
+Return the SAME JSON object with all edits applied. Keys: title, slug, short_description, description, industry, country, website_url, thumbnail_url, tech_stack (array of real technologies detected/known), services_provided (array — ONLY from MY_SERVICES exact titles), featured (boolean), published (boolean), status.`;
       const ai = await callOllama(system, user);
       const merged = {
         ...current,
         ...ai,
         tech_stack: Array.isArray(ai.tech_stack) ? ai.tech_stack.slice(0, 12).map(String) : current.tech_stack || [],
-        services_provided: Array.isArray(ai.services_provided) ? ai.services_provided.slice(0, 10).map(String) : current.services_provided || [],
+        services_provided: constrainToCatalog(ai.services_provided, serviceCatalog),
         featured: typeof ai.featured === "boolean" ? ai.featured : Boolean(current.featured),
         published: typeof ai.published === "boolean" ? ai.published : current.published !== false,
       };
@@ -205,7 +252,7 @@ title, slug, short_description, description, industry, country, website_url, thu
     const [ml, pageText] = await Promise.all([fetchMicrolink(url), fetchPageText(url)]);
 
     const system =
-      "You are an expert web analyst. Given a website's scraped text and metadata, produce a strict JSON object describing the project for a portfolio. Return ONLY valid JSON — no prose, no markdown.";
+      "You are an expert web analyst. You extract STRICTLY factual portfolio data from real scraped website text and metadata. Never invent facts. Never guess technologies you cannot see evidence of. For `services_provided`, you MUST pick only from the provided MY_SERVICES catalog — these are the services the PORTFOLIO OWNER offers, not services listed on the analyzed website. If a MY_SERVICE clearly applies to the delivered project, include it; if none apply, return an empty array. Return ONLY valid JSON.";
     const prompt = `Analyze this website and extract portfolio project details.
 
 URL: ${url}
@@ -214,20 +261,23 @@ META DESCRIPTION: ${ml.meta.description}
 PUBLISHER: ${ml.meta.publisher}
 LANG: ${ml.meta.lang}
 
-PAGE TEXT (truncated):
+PAGE TEXT (scraped, truncated):
 """
 ${pageText || "(no text extracted)"}
 """
 
+MY_SERVICES (the ONLY allowed values for services_provided — pick 2 to 6 that clearly apply to this project):
+${catalogDetail || "(none configured — return services_provided as [])"}
+
 Return a JSON object with EXACTLY these keys:
 {
-  "title": "concise project/brand name (2-6 words)",
-  "short_description": "one-line pitch under 160 chars",
-  "description": "3-5 paragraph rich description of what the site/product does, its audience, and notable features. Written in third person.",
-  "industry": "single industry label e.g. E-commerce, SaaS, Healthcare, Real Estate, Education, Finance, Agency, Portfolio, Media",
-  "country": "best-guess country of the business (full name) or empty string",
-  "tech_stack": ["3 to 8 detected technologies"],
-  "services_provided": ["3 to 6 likely services"],
+  "title": "concise real project/brand name from the site (2-6 words)",
+  "short_description": "one-line factual pitch under 160 chars, based on the site text",
+  "description": "3-5 factual paragraphs describing what the site/product actually does, its audience, and notable REAL features visible in the page text. Third person. No invented features.",
+  "industry": "one precise industry label based on evidence — e.g. E-commerce, SaaS, Healthcare, Real Estate, Education, Finance, Marketing Agency, Portfolio, Media, Restaurant, Fitness, Travel, Non-profit",
+  "country": "best-guess country of the business (full name) from address/phone/language clues, or empty string",
+  "tech_stack": ["3 to 8 technologies with clear evidence in the HTML/text (frameworks, CMS, analytics, hosting, payment, fonts). No guesses."],
+  "services_provided": ["EXACT titles copied from MY_SERVICES only — never invent"],
   "featured": false
 }
 Output ONLY JSON.`;
@@ -245,7 +295,7 @@ Output ONLY JSON.`;
       website_url: url,
       thumbnail_url: ml.screenshot || ml.meta.image || "",
       tech_stack: Array.isArray(ai.tech_stack) ? ai.tech_stack.slice(0, 12).map(String) : [],
-      services_provided: Array.isArray(ai.services_provided) ? ai.services_provided.slice(0, 10).map(String) : [],
+      services_provided: constrainToCatalog(ai.services_provided, serviceCatalog),
       images: [] as string[],
       featured: Boolean(ai.featured),
       published: true,

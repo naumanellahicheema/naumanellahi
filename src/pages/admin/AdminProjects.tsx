@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plus, Edit, Trash2, Save, X, ExternalLink, Eye, EyeOff, Star, Globe, Sparkles, Loader2 } from "lucide-react";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { TagInput } from "@/components/ui/TagInput";
+import { Progress } from "@/components/ui/progress";
 
 const emptyProject = {
   title: "", slug: "", description: "", short_description: "", industry: "", country: "",
@@ -22,6 +23,8 @@ export default function AdminProjects() {
   const [isNew, setIsNew] = useState(false);
   const [autoUrl, setAutoUrl] = useState("");
   const [autoLoading, setAutoLoading] = useState(false);
+  const [shotProgress, setShotProgress] = useState(0); // 0-100
+  const [shotStatus, setShotStatus] = useState<string>("");
   const [refineText, setRefineText] = useState("");
   const [refineLoading, setRefineLoading] = useState(false);
 
@@ -46,18 +49,43 @@ export default function AdminProjects() {
     }
   };
 
+  const refineScreenshot = async (url: string) => {
+    // Progressive retries so hero video/image gets time to paint.
+    const attempts = [1, 2, 3, 4];
+    for (const attempt of attempts) {
+      setShotStatus(`Capturing sharper hero screenshot (pass ${attempt}/${attempts.length})…`);
+      setShotProgress(Math.round((attempt / (attempts.length + 1)) * 100));
+      try {
+        const { data, error } = await supabase.functions.invoke("auto-fill-project", {
+          body: { mode: "screenshot", url, attempt },
+        });
+        if (!error && data?.screenshot) {
+          setEditing((prev: any) => prev ? { ...prev, thumbnail_url: data.screenshot } : prev);
+        }
+      } catch (_) { /* keep going */ }
+    }
+    setShotProgress(100);
+    setShotStatus("Screenshot ready — review and Save.");
+    setTimeout(() => { setShotProgress(0); setShotStatus(""); }, 2500);
+  };
+
   const handleAutoFill = async () => {
     const url = autoUrl.trim();
     if (!url) { toast({ title: "Enter a website URL first", variant: "destructive" }); return; }
     setAutoLoading(true);
+    setShotProgress(10);
+    setShotStatus("Scraping site & detecting tech stack…");
     try {
       const { data, error } = await supabase.functions.invoke("auto-fill-project", { body: { url } });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || "Failed to analyze site");
       setEditing((prev: any) => ({ ...(prev || emptyProject), ...data.data }));
-      toast({ title: "✨ Auto-filled from website!", description: "Review the fields and click Save." });
+      toast({ title: "✨ Auto-filled from website!", description: "Refining screenshot in background — you can edit fields meanwhile." });
+      // Progressive screenshot refinement runs after fields are populated.
+      await refineScreenshot(data.data?.website_url || url);
     } catch (e: any) {
       toast({ title: "Auto-fill failed", description: e.message || String(e), variant: "destructive" });
+      setShotProgress(0); setShotStatus("");
     } finally {
       setAutoLoading(false);
     }
@@ -143,8 +171,20 @@ export default function AdminProjects() {
                   </button>
                 </div>
                 <p className="text-xs mt-2" style={{ color: "hsl(var(--admin-muted-fg))" }}>
-                  Paste any live project URL. AI will scrape the site, capture a hero screenshot, and fill every field below. Review and Save.
+                  Paste any live project URL. AI scrapes the site, detects the real tech stack, and captures a hero screenshot with automatic retries so background videos/images have time to load.
                 </p>
+                {(shotProgress > 0 || shotStatus) && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between text-xs mb-1" style={{ color: "hsl(var(--admin-muted-fg))" }}>
+                      <span className="flex items-center gap-2">
+                        {shotProgress < 100 && <Loader2 size={12} className="animate-spin" />}
+                        {shotStatus}
+                      </span>
+                      <span>{shotProgress}%</span>
+                    </div>
+                    <Progress value={shotProgress} className="h-2" />
+                  </div>
+                )}
               </div>
               <div className="rounded-xl p-4" style={{ background: "hsl(var(--admin-muted))", border: "2px dashed hsl(var(--admin-border))" }}>
                 <label className="admin-label flex items-center gap-2"><Sparkles size={14} /> Refine with AI — suggest edits or fix errors</label>

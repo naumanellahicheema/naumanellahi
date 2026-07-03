@@ -20,6 +20,21 @@ export default function AdminMessages() {
     }
   };
 
+  const handleToggleReplied = async (msg: any) => {
+    try {
+      const nextReplied = !msg.is_replied;
+      await updateMessage.mutateAsync({
+        id: msg.id,
+        is_replied: nextReplied,
+        replied_at: nextReplied ? new Date().toISOString() : null,
+        is_read: true,
+      });
+      toast({ title: nextReplied ? "Marked as replied" : "Marked as not replied" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this message?")) return;
     try {
@@ -33,6 +48,8 @@ export default function AdminMessages() {
   const filtered = messages?.filter((m: any) => {
     if (filter === "unread" && m.is_read) return false;
     if (filter === "read" && !m.is_read) return false;
+    if (filter === "unreplied" && m.is_replied) return false;
+    if (filter === "replied" && !m.is_replied) return false;
     if (search) {
       const s = search.toLowerCase();
       return m.name?.toLowerCase().includes(s) || m.email?.toLowerCase().includes(s) || m.subject?.toLowerCase().includes(s) || m.message?.toLowerCase().includes(s);
@@ -41,6 +58,7 @@ export default function AdminMessages() {
   });
 
   const unreadCount = messages?.filter((m: any) => !m.is_read).length || 0;
+  const unrepliedCount = messages?.filter((m: any) => !m.is_replied).length || 0;
   const totalCount = messages?.length || 0;
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-gray-800 rounded-full" /></div>;

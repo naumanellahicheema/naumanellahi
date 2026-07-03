@@ -144,6 +144,176 @@ function detectTech(rawHtml: string, headers: Headers): string[] {
   return filterTech([...found]);
 }
 
+// ---- JSON-LD extraction (Organization / LocalBusiness / WebSite / Product) ----
+function extractJsonLd(html: string): any[] {
+  const blocks: any[] = [];
+  const re = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) !== null) {
+    try {
+      const parsed = JSON.parse(m[1].trim());
+      if (Array.isArray(parsed)) blocks.push(...parsed);
+      else if (parsed?.["@graph"]) blocks.push(...parsed["@graph"]);
+      else blocks.push(parsed);
+    } catch (_) { /* ignore malformed */ }
+  }
+  return blocks;
+}
+
+// ---- Country inference from many signals ----
+const PHONE_CC: Record<string, string> = {
+  "1": "United States", "44": "United Kingdom", "33": "France", "49": "Germany",
+  "34": "Spain", "39": "Italy", "31": "Netherlands", "32": "Belgium", "41": "Switzerland",
+  "43": "Austria", "45": "Denmark", "46": "Sweden", "47": "Norway", "48": "Poland",
+  "351": "Portugal", "353": "Ireland", "358": "Finland", "420": "Czechia", "30": "Greece",
+  "90": "Turkey", "7": "Russia", "380": "Ukraine", "91": "India", "92": "Pakistan",
+  "880": "Bangladesh", "94": "Sri Lanka", "977": "Nepal", "60": "Malaysia", "62": "Indonesia",
+  "63": "Philippines", "65": "Singapore", "66": "Thailand", "84": "Vietnam", "81": "Japan",
+  "82": "South Korea", "86": "China", "852": "Hong Kong", "886": "Taiwan",
+  "61": "Australia", "64": "New Zealand", "27": "South Africa", "20": "Egypt",
+  "212": "Morocco", "213": "Algeria", "216": "Tunisia", "234": "Nigeria", "254": "Kenya",
+  "971": "United Arab Emirates", "966": "Saudi Arabia", "974": "Qatar", "973": "Bahrain",
+  "965": "Kuwait", "968": "Oman", "962": "Jordan", "961": "Lebanon", "972": "Israel",
+  "52": "Mexico", "54": "Argentina", "55": "Brazil", "56": "Chile", "57": "Colombia", "51": "Peru",
+};
+const TLD_COUNTRY: Record<string, string> = {
+  pk: "Pakistan", in: "India", bd: "Bangladesh", lk: "Sri Lanka", uk: "United Kingdom",
+  de: "Germany", fr: "France", it: "Italy", es: "Spain", nl: "Netherlands", be: "Belgium",
+  ch: "Switzerland", at: "Austria", se: "Sweden", no: "Norway", fi: "Finland", dk: "Denmark",
+  ie: "Ireland", pl: "Poland", pt: "Portugal", cz: "Czechia", gr: "Greece", tr: "Turkey",
+  ru: "Russia", ua: "Ukraine", jp: "Japan", kr: "South Korea", cn: "China", hk: "Hong Kong",
+  tw: "Taiwan", sg: "Singapore", my: "Malaysia", id: "Indonesia", ph: "Philippines", th: "Thailand",
+  vn: "Vietnam", au: "Australia", nz: "New Zealand", za: "South Africa", eg: "Egypt",
+  ma: "Morocco", ng: "Nigeria", ke: "Kenya", ae: "United Arab Emirates", sa: "Saudi Arabia",
+  qa: "Qatar", kw: "Kuwait", il: "Israel", mx: "Mexico", br: "Brazil", ar: "Argentina",
+  cl: "Chile", co: "Colombia", pe: "Peru", ca: "Canada", us: "United States",
+};
+const CURRENCY_COUNTRY: Record<string, string> = {
+  USD: "United States", GBP: "United Kingdom", EUR: "European Union", INR: "India",
+  PKR: "Pakistan", BDT: "Bangladesh", LKR: "Sri Lanka", AED: "United Arab Emirates",
+  SAR: "Saudi Arabia", QAR: "Qatar", KWD: "Kuwait", TRY: "Turkey", JPY: "Japan",
+  CNY: "China", HKD: "Hong Kong", SGD: "Singapore", MYR: "Malaysia", IDR: "Indonesia",
+  PHP: "Philippines", THB: "Thailand", AUD: "Australia", NZD: "New Zealand",
+  ZAR: "South Africa", NGN: "Nigeria", KES: "Kenya", EGP: "Egypt", MXN: "Mexico",
+  BRL: "Brazil", CAD: "Canada", CHF: "Switzerland", SEK: "Sweden", NOK: "Norway",
+  DKK: "Denmark", PLN: "Poland",
+};
+
+function inferCountry(url: string, html: string, text: string, jsonLd: any[]): { country: string; evidence: string[] } {
+  const scores: Record<string, number> = {};
+  const evidence: string[] = [];
+  const bump = (c: string, n: number, why: string) => {
+    if (!c) return;
+    scores[c] = (scores[c] || 0) + n;
+    evidence.push(`${c} +${n} (${why})`);
+  };
+
+  // 1. JSON-LD addressCountry
+  for (const node of jsonLd) {
+    const addr = node?.address || node?.location?.address;
+    const arr = Array.isArray(addr) ? addr : [addr];
+    for (const a of arr) {
+      const ac = a?.addressCountry?.name || a?.addressCountry || a?.country;
+      if (typeof ac === "string" && ac.trim()) bump(ac.trim(), 10, "JSON-LD address");
+    }
+  }
+
+  // 2. TLD
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    const tld = host.split(".").pop() || "";
+    if (TLD_COUNTRY[tld]) bump(TLD_COUNTRY[tld], 4, `TLD .${tld}`);
+  } catch (_) {}
+
+  // 3. Phone country codes — look for +XX
+  const phoneMatches = text.match(/\+\s?(\d{1,3})[\s.\-()\d]{6,}/g) || [];
+  for (const p of phoneMatches.slice(0, 10)) {
+    const digits = p.replace(/\D/g, "");
+    for (const len of [3, 2, 1]) {
+      const cc = digits.slice(0, len);
+      if (PHONE_CC[cc]) { bump(PHONE_CC[cc], 5, `phone +${cc}`); break; }
+    }
+  }
+
+  // 4. Currency symbols / codes
+  const currMatches = text.match(/\b(USD|GBP|EUR|INR|PKR|BDT|LKR|AED|SAR|QAR|KWD|TRY|JPY|CNY|HKD|SGD|MYR|IDR|PHP|THB|AUD|NZD|ZAR|NGN|KES|EGP|MXN|BRL|CAD|CHF|SEK|NOK|DKK|PLN)\b/g) || [];
+  for (const c of currMatches.slice(0, 10)) {
+    if (CURRENCY_COUNTRY[c]) bump(CURRENCY_COUNTRY[c], 3, `currency ${c}`);
+  }
+  if (/₨|Rs\.?\s*\d/i.test(text)) bump("Pakistan", 3, "Rs symbol");
+  if (/₹\s*\d/.test(text)) bump("India", 3, "₹ symbol");
+  if (/د\.إ|AED/i.test(text)) bump("United Arab Emirates", 3, "AED symbol");
+
+  // 5. Country name mentioned in address-like context
+  const countryNames = new Set(Object.values(TLD_COUNTRY).concat(Object.values(PHONE_CC)));
+  for (const name of countryNames) {
+    const re = new RegExp(`\\b${name.replace(/\s+/g, "\\s+")}\\b`, "i");
+    if (re.test(text)) bump(name, 2, `name mention`);
+  }
+
+  // 6. hreflang default
+  const hreflangDefault = html.match(/hreflang=["']([a-z]{2})(?:-([A-Z]{2}))?["'][^>]*rel=["']alternate["']/i)
+    || html.match(/rel=["']alternate["'][^>]*hreflang=["']([a-z]{2})(?:-([A-Z]{2}))?["']/i);
+  if (hreflangDefault?.[2] && TLD_COUNTRY[hreflangDefault[2].toLowerCase()]) {
+    bump(TLD_COUNTRY[hreflangDefault[2].toLowerCase()], 2, `hreflang ${hreflangDefault[0]}`);
+  }
+
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  return { country: sorted[0]?.[0] || "", evidence: evidence.slice(0, 12) };
+}
+
+// ---- Deep fetch: about, contact, JS bundle inspection ----
+async function fetchExtras(baseUrl: string, mainHtml: string): Promise<{ text: string; techExtras: string[] }> {
+  const paths = ["/about", "/about-us", "/contact", "/contact-us", "/services", "/pricing"];
+  const jsBundles: string[] = [];
+  // Collect first few internal JS bundle URLs
+  const jsRe = /<script[^>]+src=["']([^"']+\.js[^"']*)["']/gi;
+  let m: RegExpExecArray | null;
+  while ((m = jsRe.exec(mainHtml)) !== null && jsBundles.length < 3) {
+    try {
+      const src = new URL(m[1], baseUrl).toString();
+      if (new URL(src).hostname === new URL(baseUrl).hostname) jsBundles.push(src);
+    } catch (_) {}
+  }
+
+  const doFetch = async (u: string) => {
+    try {
+      const r = await fetch(u, {
+        headers: { "User-Agent": "Mozilla/5.0", "Accept": "text/html,*/*" },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!r.ok) return "";
+      return await r.text();
+    } catch (_) { return ""; }
+  };
+
+  const pageResults = await Promise.all(paths.map((p) => doFetch(new URL(p, baseUrl).toString())));
+  const jsResults = await Promise.all(jsBundles.map(doFetch));
+
+  const pageText = pageResults.map((h, i) => h ? `\n--- ${paths[i]} ---\n${stripHtml(h).slice(0, 4000)}` : "").join("");
+
+  // Inspect JS bundles for framework hints (chunk names, dev markers)
+  const jsBlob = jsResults.join("\n").slice(0, 300_000);
+  const techExtras: string[] = [];
+  if (/\bReact\b|react\.production|_reactRootContainer|useState|useEffect/.test(jsBlob)) techExtras.push("React");
+  if (/__vite|\/@vite\/|vite\/preload-helper|\/assets\/index-[a-z0-9]+\.js/i.test(jsBlob) || /\/assets\/index-[A-Za-z0-9_-]+\.js/.test(mainHtml)) techExtras.push("Vite");
+  if (/__NEXT_DATA__|next\/dist|next\/router/.test(jsBlob)) techExtras.push("Next.js");
+  if (/@nuxt|nuxt\/dist/.test(jsBlob)) techExtras.push("Nuxt");
+  if (/svelte\/internal|_svelte/.test(jsBlob)) techExtras.push("Svelte");
+  if (/@tanstack\/react-query|useQuery|QueryClient/.test(jsBlob)) techExtras.push("React Query");
+  if (/react-router|BrowserRouter/.test(jsBlob)) techExtras.push("React Router");
+  if (/radix-ui/.test(jsBlob)) techExtras.push("Radix UI");
+  if (/shadcn/.test(jsBlob)) techExtras.push("shadcn/ui");
+  if (/framer-motion/.test(jsBlob)) techExtras.push("Framer Motion");
+  if (/gsap/.test(jsBlob)) techExtras.push("GSAP");
+  if (/supabase|@supabase\/supabase-js/.test(jsBlob)) techExtras.push("Supabase");
+  if (/firebase\/app|firebase\/auth/.test(jsBlob)) techExtras.push("Firebase");
+  if (/stripe\.com|@stripe\/stripe-js/.test(jsBlob)) techExtras.push("Stripe");
+
+  return { text: pageText, techExtras: filterTech(techExtras) };
+}
+
+
 async function fetchMicrolink(url: string, waitMs = 5000) {
   const scrollScript = `async () => {
     await new Promise(r => setTimeout(r, 1200));

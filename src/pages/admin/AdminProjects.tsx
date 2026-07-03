@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import { useAllProjects, useCreateProject, useUpdateProject, useDeleteProject } from "@/hooks/usePortfolioData";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Save, X, ExternalLink, Eye, EyeOff, Star, Globe } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Plus, Edit, Trash2, Save, X, ExternalLink, Eye, EyeOff, Star, Globe, Sparkles, Loader2 } from "lucide-react";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { TagInput } from "@/components/ui/TagInput";
 

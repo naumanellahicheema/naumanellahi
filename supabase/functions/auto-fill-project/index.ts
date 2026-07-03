@@ -486,23 +486,53 @@ Deno.serve(async (req) => {
 
     // First screenshot pass uses moderate wait — client will retry with longer waits.
     const [ml, raw] = await Promise.all([fetchMicrolink(url, 4000), fetchRawHtml(url)]);
-    const detectedTech = detectTech(raw.html, raw.headers);
-    const pageText = stripHtml(raw.html).slice(0, 18000);
+    const detectedTechBase = detectTech(raw.html, raw.headers);
+    const jsonLd = extractJsonLd(raw.html);
+    const mainText = stripHtml(raw.html);
+    // Fetch about/contact/services + JS bundles in parallel for deeper signal
+    const extras = await fetchExtras(url, raw.html);
+    const detectedTech = filterTech([...detectedTechBase, ...extras.techExtras]);
+    const fullText = (mainText + extras.text).slice(0, 24000);
+
+    // Country inference — evidence-based scoring across many signals
+    const { country: detectedCountry, evidence: countryEvidence } = inferCountry(url, raw.html, mainText + extras.text, jsonLd);
+
+    // JSON-LD condensed for the prompt
+    const jsonLdSummary = jsonLd
+      .filter((n) => n && (n["@type"] || n.name || n.description))
+      .map((n) => ({
+        type: n["@type"], name: n.name, description: n.description,
+        url: n.url, address: n.address, telephone: n.telephone,
+        areaServed: n.areaServed, sameAs: n.sameAs,
+      }))
+      .slice(0, 6);
 
     const system =
-      "You are an expert web analyst. Extract STRICTLY factual portfolio data. RULES: (1) `services_provided` must come only from MY_SERVICES catalog. (2) For `tech_stack`, START with the DETECTED_TECH list (already verified via HTML fingerprints) — you MAY add more only if you see clear evidence in the HTML/text. NEVER include 'Lovable', 'Lovable.dev', 'GPT Engineer', or the site's hosting provider unless it's a genuine part of the stack. Return ONLY valid JSON.";
+      "You are a senior web analyst. Extract STRICTLY factual portfolio data. HARD RULES:\n" +
+      "1) `services_provided` — ONLY exact titles from MY_SERVICES.\n" +
+      "2) `tech_stack` — START with every DETECTED_TECH entry verbatim (already verified from HTML+JS+headers). You MAY add more ONLY with direct evidence in the provided data. NEVER include 'Lovable', 'Lovable.dev', 'GPT Engineer', or the hosting provider (Vercel/Netlify/Cloudflare) unless it's clearly a core part of the stack.\n" +
+      "3) `country` — Prefer DETECTED_COUNTRY when present (it's derived from JSON-LD, phone codes, currency, TLD, and address mentions). Only override if PAGE TEXT contains explicit contradicting evidence, and then use full English country name.\n" +
+      "4) `description` — 3–5 substantive paragraphs (~120–180 words total) in third person, grounded in the page text and JSON-LD. Cover: what the product/site does, who it's for, notable real features/sections visible in the text, and any differentiators mentioned. No invention, no marketing fluff, no repetition of the short description.\n" +
+      "5) `industry` — one precise label from a real vertical (E-commerce, SaaS, Fintech, Healthcare, EdTech, Real Estate, Marketing Agency, Restaurant, Fitness, Travel, Media, Non-profit, Portfolio, Manufacturing, Logistics, Legal, Automotive, Beauty, Fashion, Construction, etc.).\n" +
+      "Return ONLY valid JSON.";
     const prompt = `URL: ${url}
 META TITLE: ${ml.meta.title}
 META DESCRIPTION: ${ml.meta.description}
 PUBLISHER: ${ml.meta.publisher}
 LANG: ${ml.meta.lang}
 
-DETECTED_TECH (verified from HTML/headers — always include ALL of these in tech_stack):
+DETECTED_TECH (verified — include ALL verbatim in tech_stack):
 ${detectedTech.length ? detectedTech.map((t) => `- ${t}`).join("\n") : "(none detected)"}
 
-PAGE TEXT (truncated):
+DETECTED_COUNTRY: ${detectedCountry || "(unknown)"}
+COUNTRY_EVIDENCE: ${countryEvidence.join("; ") || "(none)"}
+
+JSON-LD STRUCTURED DATA (from the site):
+${jsonLdSummary.length ? JSON.stringify(jsonLdSummary, null, 2) : "(none)"}
+
+PAGE TEXT (home + about/contact/services, truncated):
 """
-${pageText || "(no text extracted)"}
+${fullText || "(no text extracted)"}
 """
 
 MY_SERVICES (ONLY allowed values for services_provided — pick 2 to 6):
@@ -512,10 +542,10 @@ Return JSON with keys:
 {
   "title": "concise real project/brand name (2-6 words)",
   "short_description": "one-line factual pitch under 160 chars",
-  "description": "3-5 factual paragraphs. Third person. No invented features.",
+  "description": "3-5 factual paragraphs, ~120-180 words. Third person. Grounded in the provided text.",
   "industry": "one precise industry label",
-  "country": "full country name or empty string",
-  "tech_stack": ["MUST include all DETECTED_TECH entries verbatim; may add more with evidence"],
+  "country": "full English country name (prefer DETECTED_COUNTRY)",
+  "tech_stack": ["MUST include every DETECTED_TECH entry verbatim; add more only with evidence"],
   "services_provided": ["EXACT titles from MY_SERVICES only"],
   "featured": false
 }
@@ -524,8 +554,10 @@ Output ONLY JSON.`;
     const ai = await callOllama(system, prompt);
 
     const title = String(ai.title || ml.meta.title || "").trim();
-    // Merge detected + AI tech, filter blocklist, dedupe.
     const mergedTech = filterTech([...detectedTech, ...(Array.isArray(ai.tech_stack) ? ai.tech_stack : [])]).slice(0, 12);
+    // Country: prefer AI answer if non-empty and looks like a real country name, else fall back to detector
+    const aiCountry = String(ai.country || "").trim();
+    const country = aiCountry && aiCountry.toLowerCase() !== "unknown" ? aiCountry : detectedCountry;
 
     const result = {
       title,
@@ -533,7 +565,7 @@ Output ONLY JSON.`;
       short_description: String(ai.short_description || ml.meta.description || "").slice(0, 200),
       description: String(ai.description || ml.meta.description || ""),
       industry: String(ai.industry || ""),
-      country: String(ai.country || ""),
+      country,
       website_url: url,
       thumbnail_url: ml.screenshot || ml.meta.image || "",
       tech_stack: mergedTech,
@@ -544,7 +576,10 @@ Output ONLY JSON.`;
       status: "active",
     };
 
-    return new Response(JSON.stringify({ success: true, data: result, meta: ml.meta, detectedTech }), {
+    return new Response(JSON.stringify({
+      success: true, data: result, meta: ml.meta,
+      debug: { detectedTech, detectedCountry, countryEvidence, jsonLdCount: jsonLd.length },
+    }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

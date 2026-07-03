@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plus, Edit, Trash2, Save, X, ExternalLink, Eye, EyeOff, Star, Globe, Sparkles, Loader2 } from "lucide-react";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { TagInput } from "@/components/ui/TagInput";
+import { Progress } from "@/components/ui/progress";
 
 const emptyProject = {
   title: "", slug: "", description: "", short_description: "", industry: "", country: "",

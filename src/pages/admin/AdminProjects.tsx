@@ -171,8 +171,20 @@ export default function AdminProjects() {
                   </button>
                 </div>
                 <p className="text-xs mt-2" style={{ color: "hsl(var(--admin-muted-fg))" }}>
-                  Paste any live project URL. AI will scrape the site, capture a hero screenshot, and fill every field below. Review and Save.
+                  Paste any live project URL. AI scrapes the site, detects the real tech stack, and captures a hero screenshot with automatic retries so background videos/images have time to load.
                 </p>
+                {(shotProgress > 0 || shotStatus) && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between text-xs mb-1" style={{ color: "hsl(var(--admin-muted-fg))" }}>
+                      <span className="flex items-center gap-2">
+                        {shotProgress < 100 && <Loader2 size={12} className="animate-spin" />}
+                        {shotStatus}
+                      </span>
+                      <span>{shotProgress}%</span>
+                    </div>
+                    <Progress value={shotProgress} className="h-2" />
+                  </div>
+                )}
               </div>
               <div className="rounded-xl p-4" style={{ background: "hsl(var(--admin-muted))", border: "2px dashed hsl(var(--admin-border))" }}>
                 <label className="admin-label flex items-center gap-2"><Sparkles size={14} /> Refine with AI — suggest edits or fix errors</label>

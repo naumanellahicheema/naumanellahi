@@ -150,7 +150,16 @@ export default function AdminMessages() {
                     <span className={`text-sm ${!msg.is_read ? "font-semibold" : "font-medium"}`} style={{ color: "hsl(var(--admin-fg))" }}>
                       {msg.name}
                     </span>
-                    {!msg.is_read && <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />}
+                    {!msg.is_read && <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" title="Unread" />}
+                    {msg.is_replied ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <CheckCircle2 size={10} /> Replied
+                      </span>
+                    ) : msg.is_read ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                        <Circle size={10} /> To reply
+                      </span>
+                    ) : null}
                   </div>
                   <p className="text-sm truncate" style={{ color: msg.subject ? "hsl(var(--admin-fg))" : "hsl(var(--admin-muted-fg))" }}>
                     {msg.subject || msg.message}
@@ -159,6 +168,18 @@ export default function AdminMessages() {
 
                 {/* Time & Actions */}
                 <div className="flex items-center gap-3 flex-shrink-0">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleToggleReplied(msg); }}
+                    className={`hidden sm:inline-flex items-center gap-1 px-2 py-1 text-[11px] rounded-md border transition-colors ${
+                      msg.is_replied
+                        ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                        : "bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
+                    }`}
+                    title={msg.is_replied ? "Mark as not replied" : "Mark as replied"}
+                  >
+                    {msg.is_replied ? <CheckCircle2 size={12} /> : <Circle size={12} />}
+                    {msg.is_replied ? "Replied" : "Mark replied"}
+                  </button>
                   <span className="text-xs" style={{ color: "hsl(var(--admin-muted-fg))" }}>
                     {formatTime(msg.received_at)}
                   </span>
@@ -195,6 +216,7 @@ export default function AdminMessages() {
                     <div className="flex items-center gap-2">
                       <a
                         href={`mailto:${msg.email}?subject=Re: ${msg.subject || "Your inquiry"}`}
+                        onClick={() => handleToggleReplied({ ...msg, is_replied: false })}
                         className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
                       >
                         <Reply size={14} /> Reply

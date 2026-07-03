@@ -7,13 +7,18 @@ export function useRealtimeSubscription(table: string, queryKey: (string | objec
   const queryClient = useQueryClient();
   
   useEffect(() => {
-    const channel = supabase
-      .channel(`${table}-changes-${JSON.stringify(queryKey)}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table }, () => {
+    const channel = supabase.channel(
+      `${table}-changes-${JSON.stringify(queryKey)}-${Math.random().toString(36).slice(2)}`
+    );
+    channel.on(
+      'postgres_changes' as any,
+      { event: '*', schema: 'public', table },
+      () => {
         queryClient.invalidateQueries({ queryKey });
-      })
-      .subscribe();
-    
+      }
+    );
+    channel.subscribe();
+
     return () => { supabase.removeChannel(channel); };
   }, [table, queryClient, JSON.stringify(queryKey)]);
 }

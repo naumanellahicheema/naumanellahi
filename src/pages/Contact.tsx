@@ -40,8 +40,8 @@ export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const email = settings?.contact_email || profile?.email;
-  const phone = settings?.contact_phone || profile?.phone;
+  const email = settings?.contact_email;
+  const phone = settings?.contact_phone;
   const location = profile?.location || "Pakistan";
 
   const checkRateLimit = (): string | null => {

@@ -224,12 +224,10 @@ export type Database = {
           bio: string | null
           created_at: string
           education: string | null
-          email: string | null
           experience_start_year: number | null
           id: string
           location: string | null
           name: string
-          phone: string | null
           resume_url: string | null
           seo_description: string | null
           seo_keywords: string[] | null
@@ -243,12 +241,10 @@ export type Database = {
           bio?: string | null
           created_at?: string
           education?: string | null
-          email?: string | null
           experience_start_year?: number | null
           id?: string
           location?: string | null
           name?: string
-          phone?: string | null
           resume_url?: string | null
           seo_description?: string | null
           seo_keywords?: string[] | null
@@ -262,12 +258,10 @@ export type Database = {
           bio?: string | null
           created_at?: string
           education?: string | null
-          email?: string | null
           experience_start_year?: number | null
           id?: string
           location?: string | null
           name?: string
-          phone?: string | null
           resume_url?: string | null
           seo_description?: string | null
           seo_keywords?: string[] | null

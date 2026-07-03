@@ -4,7 +4,7 @@ import {
   ArrowUpRight, MapPin, Mail, Phone, GraduationCap, Briefcase, Download,
 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
-import { useProfile, useExperiences, useSkills } from "@/hooks/usePortfolioData";
+import { useProfile, useExperiences, useSkills, useSiteSettings } from "@/hooks/usePortfolioData";
 
 function SectionMarker({ n, label }: { n: string; label: string }) {
   return (
@@ -16,6 +16,7 @@ function SectionMarker({ n, label }: { n: string; label: string }) {
 
 export default function About() {
   const { data: profile } = useProfile();
+  const { data: settings } = useSiteSettings();
   const { data: experiences } = useExperiences();
   const { data: skills } = useSkills();
 
@@ -110,8 +111,8 @@ export default function About() {
             <div className="mt-8 border border-foreground/10 rounded-2xl bg-background divide-y divide-foreground/10">
               {[
                 { icon: MapPin, label: "Location", value: profile?.location || "—" },
-                { icon: Mail, label: "Email", value: profile?.email || "—", href: profile?.email && `mailto:${profile.email}` },
-                { icon: Phone, label: "Phone", value: profile?.phone || "—", href: profile?.phone && `tel:${profile.phone}` },
+                { icon: Mail, label: "Email", value: settings?.contact_email || "—", href: settings?.contact_email && `mailto:${settings.contact_email}` },
+                { icon: Phone, label: "Phone", value: settings?.contact_phone || "—", href: settings?.contact_phone && `tel:${settings.contact_phone}` },
                 { icon: GraduationCap, label: "Education", value: profile?.education || "—" },
               ].map(({ icon: Icon, label, value, href }) => (
                 <div key={label} className="flex items-center gap-4 px-5 py-3.5">

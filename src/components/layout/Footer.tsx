@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Mail, MessageCircle, Github, Linkedin, Twitter, Instagram, Youtube, ArrowUpRight } from "lucide-react";
 import { useSiteSettings, useProfile } from "@/hooks/usePortfolioData";
+import { Logo } from "@/components/Logo";
 
 const socialIcons: Record<string, any> = { github: Github, linkedin: Linkedin, twitter: Twitter, instagram: Instagram, youtube: Youtube };
 
@@ -33,13 +34,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8">
           {/* Brand */}
           <div className="md:col-span-4">
-            <Link to="/" className="inline-flex items-center gap-3 mb-6 group">
-              <span className="relative w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center font-display font-bold text-lg">
-                {siteName.charAt(0).toUpperCase()}
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-orange-400 border-2 border-background" />
-              </span>
-              <span className="font-display text-xl font-bold tracking-tight">{siteName}</span>
-            </Link>
+            <Logo siteName={siteName} size="md" className="mb-6" />
             <p className="text-foreground/60 leading-relaxed max-w-sm mb-8">
               {tagline}
             </p>

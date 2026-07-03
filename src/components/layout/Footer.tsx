@@ -13,7 +13,7 @@ export function Footer() {
   const email = settings?.contact_email || profile?.email || "hello@example.com";
   const location = profile?.location || "Pakistan";
   const year = new Date().getFullYear();
-  const hostLabel = (settings?.site_url || "naumanellahi.com").replace(/^https?:\/\//, "").replace(/\/$/, "").toUpperCase();
+  const hostLabel = ((settings as any)?.site_url || "naumanellahi.com").replace(/^https?:\/\//, "").replace(/\/$/, "").toUpperCase();
 
   const socialLinks = (settings?.social_links as Record<string, string>) || {};
   const activeSocials = Object.entries(socialLinks).filter(([, url]) => url && url.trim());

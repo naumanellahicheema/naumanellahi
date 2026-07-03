@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useSiteSettings } from "@/hooks/usePortfolioData";
+import { Logo } from "@/components/Logo";
 
 const allNavLinks = [
   { href: "/", label: "Home", key: "home" },
@@ -66,15 +67,7 @@ export function Navbar() {
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 tap-target">
-              {settings?.logo_url ? (
-                <img src={settings.logo_url} alt={settings.site_name || "Logo"} className="h-8 sm:h-10 w-auto" />
-              ) : (
-                <span className="text-lg sm:text-xl font-display font-bold text-foreground">
-                  {settings?.site_name || "Nauman Ellahi"}
-                </span>
-              )}
-            </Link>
+            <Logo siteName={settings?.site_name || "Nauman Ellahi"} size="md" />
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6 lg:gap-8">

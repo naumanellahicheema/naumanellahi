@@ -78,6 +78,13 @@ export function LiveChat() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
+  // Allow anywhere in the app to open the live chat via a global event
+  useEffect(() => {
+    const openHandler = () => setIsOpen(true);
+    window.addEventListener("livechat:open", openHandler);
+    return () => window.removeEventListener("livechat:open", openHandler);
+  }, []);
+
   const send = async (text: string) => {
     if (!text.trim() || isLoading) return;
     const userMsg: Msg = { role: "user", content: text.trim() };

@@ -11,7 +11,7 @@ export function Footer() {
 
   const siteName = settings?.site_name || "Nauman Ellahi";
   const tagline = settings?.tagline || "Building secure web apps that drive real results.";
-  const email = settings?.contact_email || profile?.email || "hello@example.com";
+  const email = settings?.contact_email || "hello@example.com";
   const location = profile?.location || "Pakistan";
   const year = new Date().getFullYear();
   const hostLabel = ((settings as any)?.site_url || "naumanellahi.com").replace(/^https?:\/\//, "").replace(/\/$/, "").toUpperCase();

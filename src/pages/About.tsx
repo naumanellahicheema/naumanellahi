@@ -110,8 +110,8 @@ export default function About() {
             <div className="mt-8 border border-foreground/10 rounded-2xl bg-background divide-y divide-foreground/10">
               {[
                 { icon: MapPin, label: "Location", value: profile?.location || "—" },
-                { icon: Mail, label: "Email", value: profile?.email || "—", href: profile?.email && `mailto:${profile.email}` },
-                { icon: Phone, label: "Phone", value: profile?.phone || "—", href: profile?.phone && `tel:${profile.phone}` },
+                { icon: Mail, label: "Email", value: settings?.contact_email || "—", href: settings?.contact_email && `mailto:${settings.contact_email}` },
+                { icon: Phone, label: "Phone", value: settings?.contact_phone || "—", href: settings?.contact_phone && `tel:${settings.contact_phone}` },
                 { icon: GraduationCap, label: "Education", value: profile?.education || "—" },
               ].map(({ icon: Icon, label, value, href }) => (
                 <div key={label} className="flex items-center gap-4 px-5 py-3.5">

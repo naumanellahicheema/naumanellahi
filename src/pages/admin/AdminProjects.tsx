@@ -22,6 +22,8 @@ export default function AdminProjects() {
   const [isNew, setIsNew] = useState(false);
   const [autoUrl, setAutoUrl] = useState("");
   const [autoLoading, setAutoLoading] = useState(false);
+  const [shotProgress, setShotProgress] = useState(0); // 0-100
+  const [shotStatus, setShotStatus] = useState<string>("");
   const [refineText, setRefineText] = useState("");
   const [refineLoading, setRefineLoading] = useState(false);
 

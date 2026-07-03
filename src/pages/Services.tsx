@@ -243,16 +243,16 @@ export default function Services() {
           <SectionMarker n="05" label="What clients say" />
           <div className="max-w-4xl">
             <p className="text-2xl sm:text-3xl md:text-4xl font-serif-italic text-foreground leading-[1.3]">
-              "{testimonials[0].quote}"
+              "{testimonials[0].message}"
             </p>
             <div className="mt-8 flex items-center gap-4">
               {testimonials[0].avatar_url && (
-                <img src={testimonials[0].avatar_url} alt={testimonials[0].author_name} className="w-12 h-12 rounded-full object-cover" />
+                <img src={testimonials[0].avatar_url} alt={testimonials[0].client_name} className="w-12 h-12 rounded-full object-cover" />
               )}
               <div>
-                <div className="font-medium">{testimonials[0].author_name}</div>
+                <div className="font-medium">{testimonials[0].client_name}</div>
                 <div className="text-sm text-foreground/60">
-                  {testimonials[0].author_role}{testimonials[0].author_company ? ` · ${testimonials[0].author_company}` : ""}
+                  {testimonials[0].role}{testimonials[0].company ? ` · ${testimonials[0].company}` : ""}
                 </div>
               </div>
             </div>

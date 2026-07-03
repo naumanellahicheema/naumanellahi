@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Mail, MessageCircle, Github, Linkedin, Twitter, Instagram, Youtube, ArrowUpRight } from "lucide-react";
 import { useSiteSettings, useProfile } from "@/hooks/usePortfolioData";
+import { Logo } from "@/components/Logo";
 
 const socialIcons: Record<string, any> = { github: Github, linkedin: Linkedin, twitter: Twitter, instagram: Instagram, youtube: Youtube };
 
@@ -33,13 +34,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8">
           {/* Brand */}
           <div className="md:col-span-4">
-            <Link to="/" className="inline-flex items-center gap-3 mb-6 group">
-              <span className="relative w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center font-display font-bold text-lg">
-                {siteName.charAt(0).toUpperCase()}
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-orange-400 border-2 border-background" />
-              </span>
-              <span className="font-display text-xl font-bold tracking-tight">{siteName}</span>
-            </Link>
+            <Logo siteName={siteName} size="md" className="mb-6" />
             <p className="text-foreground/60 leading-relaxed max-w-sm mb-8">
               {tagline}
             </p>
@@ -73,13 +68,14 @@ export function Footer() {
               <Mail size={14} className="flex-shrink-0 text-foreground/40 group-hover:text-foreground transition-colors" />
               <span className="truncate">{email}</span>
             </a>
-            <Link
-              to="/contact"
-              className="group flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors"
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("livechat:open"))}
+              className="group flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors text-left w-full"
             >
               <MessageCircle size={14} className="flex-shrink-0 text-foreground/40 group-hover:text-foreground transition-colors" />
               <span>Live Chat</span>
-            </Link>
+            </button>
             {activeSocials.length > 0 && (
               <div className="pt-4 mt-2 border-t border-foreground/10 flex flex-wrap gap-2">
                 {activeSocials.map(([platform, url]) => {
@@ -115,23 +111,31 @@ export function Footer() {
         </div>
       </div>
 
-      {/* Giant wordmark */}
-      <div
-        aria-hidden="true"
-        className="relative overflow-hidden select-none pointer-events-none"
-      >
-        <div
-          className="whitespace-nowrap text-center font-display font-black tracking-tighter leading-[0.85] pb-2"
-          style={{
-            fontSize: "clamp(6rem, 22vw, 22rem)",
-            background: "linear-gradient(180deg, hsl(var(--foreground) / 0.08) 0%, hsl(var(--foreground) / 0) 90%)",
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            color: "transparent",
-          }}
-        >
-          {siteName}
-        </div>
+      {/* Giant faded wordmark — responsive per breakpoint */}
+      <div aria-hidden="true" className="relative overflow-hidden select-none pointer-events-none">
+        {(["Nec", "Nauman", siteName] as const).map((text, i) => (
+          <div
+            key={i}
+            className={
+              "whitespace-nowrap text-center font-display font-black tracking-tighter leading-[0.85] pb-2 " +
+              (i === 0
+                ? "block sm:hidden"
+                : i === 1
+                ? "hidden sm:block lg:hidden"
+                : "hidden lg:block")
+            }
+            style={{
+              fontSize: "clamp(6rem, 26vw, 22rem)",
+              background:
+                "linear-gradient(180deg, hsl(var(--foreground) / 0.08) 0%, hsl(var(--foreground) / 0) 90%)",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              color: "transparent",
+            }}
+          >
+            {text}
+          </div>
+        ))}
       </div>
     </footer>
   );

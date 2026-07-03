@@ -4,7 +4,7 @@ import {
   ArrowUpRight, MapPin, Mail, Phone, GraduationCap, Briefcase, Download,
 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
-import { useProfile, useExperiences, useSkills } from "@/hooks/usePortfolioData";
+import { useProfile, useExperiences, useSkills, useSiteSettings } from "@/hooks/usePortfolioData";
 
 function SectionMarker({ n, label }: { n: string; label: string }) {
   return (
@@ -16,6 +16,7 @@ function SectionMarker({ n, label }: { n: string; label: string }) {
 
 export default function About() {
   const { data: profile } = useProfile();
+  const { data: settings } = useSiteSettings();
   const { data: experiences } = useExperiences();
   const { data: skills } = useSkills();
 

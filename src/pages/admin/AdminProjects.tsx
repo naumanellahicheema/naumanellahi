@@ -99,6 +99,30 @@ export default function AdminProjects() {
               <button onClick={() => { setEditing(null); setIsNew(false); }} className="p-2 rounded-lg hover:bg-gray-100" style={{ border: "1px solid hsl(var(--admin-border))" }}><X size={20} /></button>
             </div>
             <div className="space-y-6">
+              <div className="rounded-xl p-4" style={{ background: "hsl(var(--admin-muted))", border: "2px dashed hsl(var(--admin-border))" }}>
+                <label className="admin-label flex items-center gap-2"><Sparkles size={14} /> Auto-fill from live URL (AI)</label>
+                <div className="flex gap-2 mt-2">
+                  <input
+                    type="url"
+                    value={autoUrl}
+                    onChange={(e) => setAutoUrl(e.target.value)}
+                    placeholder="https://your-project-site.com"
+                    className="admin-input-bordered flex-1"
+                    disabled={autoLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAutoFill}
+                    disabled={autoLoading}
+                    className="admin-btn-bordered whitespace-nowrap"
+                  >
+                    {autoLoading ? <><Loader2 size={16} className="animate-spin" /> Analyzing…</> : <><Sparkles size={16} /> Auto-fill</>}
+                  </button>
+                </div>
+                <p className="text-xs mt-2" style={{ color: "hsl(var(--admin-muted-fg))" }}>
+                  Paste any live project URL. AI will scrape the site, capture a hero screenshot, and fill every field below. Review and Save.
+                </p>
+              </div>
               <div><label className="admin-label">Thumbnail</label><ImageUpload value={editing.thumbnail_url} onChange={(url) => handleFieldChange("thumbnail_url", url)} onRemove={() => handleFieldChange("thumbnail_url", "")} folder="projects" /></div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div><label className="admin-label">Title *</label><input type="text" value={editing.title || ""} onChange={(e) => handleFieldChange("title", e.target.value)} className="admin-input-bordered" placeholder="Project title" /></div>

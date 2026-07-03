@@ -532,7 +532,60 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profile: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          education: string | null
+          experience_start_year: number | null
+          id: string | null
+          location: string | null
+          name: string | null
+          resume_url: string | null
+          seo_description: string | null
+          seo_keywords: string[] | null
+          seo_title: string | null
+          short_bio: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          education?: string | null
+          experience_start_year?: number | null
+          id?: string | null
+          location?: string | null
+          name?: string | null
+          resume_url?: string | null
+          seo_description?: string | null
+          seo_keywords?: string[] | null
+          seo_title?: string | null
+          short_bio?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          education?: string | null
+          experience_start_year?: number | null
+          id?: string | null
+          location?: string | null
+          name?: string | null
+          resume_url?: string | null
+          seo_description?: string | null
+          seo_keywords?: string[] | null
+          seo_title?: string | null
+          short_bio?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {

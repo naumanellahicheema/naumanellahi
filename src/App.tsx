@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, RequireAdmin } from "@/hooks/useAuth";
 import { ScrollToTop } from "@/components/ScrollToTop";
 
-import { FloatingContact } from "@/components/FloatingContact";
 import { LiveChat } from "@/components/LiveChat";
 import Index from "./pages/Index";
 import About from "./pages/About";
@@ -56,16 +55,16 @@ const App = () => (
           <ScrollToTop />
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<><Index /><FloatingContact /><LiveChat /></>} />
-            <Route path="/about" element={<><About /><FloatingContact /><LiveChat /></>} />
-            <Route path="/portfolio" element={<><Portfolio /><FloatingContact /><LiveChat /></>} />
-            <Route path="/portfolio/:slug" element={<><ProjectDetail /><FloatingContact /><LiveChat /></>} />
-            <Route path="/services" element={<><Services /><FloatingContact /><LiveChat /></>} />
-            <Route path="/experience" element={<><Experience /><FloatingContact /><LiveChat /></>} />
-            <Route path="/testimonials" element={<><Testimonials /><FloatingContact /><LiveChat /></>} />
-            <Route path="/blog" element={<><Blog /><FloatingContact /><LiveChat /></>} />
-            <Route path="/blog/:slug" element={<><BlogPost /><FloatingContact /><LiveChat /></>} />
-            <Route path="/contact" element={<><Contact /><FloatingContact /><LiveChat /></>} />
+            <Route path="/" element={<><Index /><LiveChat /></>} />
+            <Route path="/about" element={<><About /><LiveChat /></>} />
+            <Route path="/portfolio" element={<><Portfolio /><LiveChat /></>} />
+            <Route path="/portfolio/:slug" element={<><ProjectDetail /><LiveChat /></>} />
+            <Route path="/services" element={<><Services /><LiveChat /></>} />
+            <Route path="/experience" element={<><Experience /><LiveChat /></>} />
+            <Route path="/testimonials" element={<><Testimonials /><LiveChat /></>} />
+            <Route path="/blog" element={<><Blog /><LiveChat /></>} />
+            <Route path="/blog/:slug" element={<><BlogPost /><LiveChat /></>} />
+            <Route path="/contact" element={<><Contact /><LiveChat /></>} />
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLogin />} />
             <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>

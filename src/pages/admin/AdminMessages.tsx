@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useContactMessages, useUpdateContactMessage, useDeleteContactMessage } from "@/hooks/usePortfolioData";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, MailOpen, Trash2, Reply, Search, Inbox, Clock, User, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { Mail, MailOpen, Trash2, Reply, Search, Inbox, Clock, User, ChevronDown, ChevronUp, ExternalLink, CheckCircle2, Circle } from "lucide-react";
 
 export default function AdminMessages() {
   const { data: messages, isLoading } = useContactMessages();
@@ -9,7 +9,7 @@ export default function AdminMessages() {
   const deleteMessage = useDeleteContactMessage();
   const { toast } = useToast();
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
+  const [filter, setFilter] = useState<"all" | "unread" | "read" | "unreplied" | "replied">("all");
   const [search, setSearch] = useState("");
 
   const handleMarkRead = async (id: string, is_read: boolean) => {

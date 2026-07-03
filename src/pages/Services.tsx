@@ -101,6 +101,60 @@ export default function Services() {
         </div>
       </section>
 
+      {/* ── Filter + Search ──────────────────────── */}
+      <section className="editorial-container pb-6">
+        <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between border border-foreground/10 rounded-2xl p-4 bg-background">
+          <div className="relative flex-1 lg:max-w-md">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search services, capabilities, tech…"
+              className="w-full pl-11 pr-10 py-2.5 rounded-xl bg-foreground/[0.03] border border-transparent focus:border-foreground/20 focus:bg-background outline-none text-sm transition"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-foreground/10 transition"
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((c) => (
+              <button
+                key={c}
+                onClick={() => setActiveCat(c)}
+                className={`px-3 py-1.5 rounded-full border text-[11px] font-mono uppercase tracking-widest transition ${
+                  activeCat === c
+                    ? "bg-foreground text-background border-foreground"
+                    : "border-foreground/15 text-foreground/70 hover:border-foreground/40"
+                }`}
+              >
+                {c === "all" ? `All (${list.length})` : c}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-3 text-[11px] font-mono uppercase tracking-widest text-foreground/50">
+          {filtered.length} result{filtered.length === 1 ? "" : "s"}
+          {query && ` for "${query}"`}
+          {activeCat !== "all" && ` in ${activeCat}`}
+        </div>
+      </section>
+
+      {filtered.length === 0 && (
+        <section className="editorial-container pb-12">
+          <div className="border border-dashed border-foreground/15 rounded-2xl p-16 text-center text-foreground/50">
+            <Sparkles size={22} className="mx-auto mb-3" />
+            No services match. Try a different keyword or clear the filter.
+          </div>
+        </section>
+      )}
+
       {/* ── Primary service spotlight ─────────────── */}
       {primary && (
         <section className="editorial-section editorial-container rule-top">

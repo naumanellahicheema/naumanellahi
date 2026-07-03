@@ -16,11 +16,17 @@ function SectionMarker({ n, label }: { n: string; label: string }) {
 }
 
 const schema = z.object({
-  name: z.string().trim().min(1, "Name required").max(120),
-  email: z.string().trim().email("Invalid email").max(255),
+  name: z.string().trim().min(1, "Name is required").max(120, "Name too long"),
+  email: z.string().trim().email("Enter a valid email").max(255),
   subject: z.string().trim().max(200).optional().or(z.literal("")),
-  message: z.string().trim().min(5, "Message too short").max(4000),
+  message: z.string().trim().min(5, "Message is too short (min 5 chars)").max(4000, "Message too long (max 4000)"),
 });
+
+const RATE_LIMIT_KEY = "contact_last_submit";
+const RATE_LIMIT_COUNT_KEY = "contact_submit_count";
+const RATE_LIMIT_WINDOW_MS = 60_000; // 60s cooldown between sends
+const RATE_LIMIT_HOURLY_MAX = 5;
+const RATE_LIMIT_HOURLY_KEY = "contact_hourly_window";
 
 export default function Contact() {
   const { data: settings } = useSiteSettings();
@@ -29,6 +35,8 @@ export default function Contact() {
   const { toast } = useToast();
 
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [honeypot, setHoneypot] = useState(""); // bots fill hidden field
+  const [renderedAt] = useState(() => Date.now()); // timing check
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -36,23 +44,79 @@ export default function Contact() {
   const phone = settings?.contact_phone || profile?.phone;
   const location = profile?.location || "Pakistan";
 
+  const checkRateLimit = (): string | null => {
+    const now = Date.now();
+    // Cooldown
+    const last = Number(localStorage.getItem(RATE_LIMIT_KEY) || 0);
+    if (last && now - last < RATE_LIMIT_WINDOW_MS) {
+      const wait = Math.ceil((RATE_LIMIT_WINDOW_MS - (now - last)) / 1000);
+      return `Please wait ${wait}s before sending another message.`;
+    }
+    // Hourly window
+    const winStart = Number(localStorage.getItem(RATE_LIMIT_HOURLY_KEY) || 0);
+    let count = Number(localStorage.getItem(RATE_LIMIT_COUNT_KEY) || 0);
+    if (!winStart || now - winStart > 3600_000) {
+      localStorage.setItem(RATE_LIMIT_HOURLY_KEY, String(now));
+      localStorage.setItem(RATE_LIMIT_COUNT_KEY, "0");
+      count = 0;
+    }
+    if (count >= RATE_LIMIT_HOURLY_MAX) {
+      return `Hourly limit reached (${RATE_LIMIT_HOURLY_MAX} messages). Try again later or email me directly.`;
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Anti-spam: honeypot must be empty
+    if (honeypot.trim() !== "") {
+      toast({ title: "Blocked", description: "Suspicious submission detected.", variant: "destructive" });
+      return;
+    }
+    // Anti-spam: form filled suspiciously fast (< 2s)
+    if (Date.now() - renderedAt < 2000) {
+      toast({ title: "Slow down", description: "Please take a moment before submitting.", variant: "destructive" });
+      return;
+    }
+
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
       const fe: Record<string, string> = {};
       parsed.error.issues.forEach((i) => (fe[i.path[0] as string] = i.message));
       setErrors(fe);
+      toast({
+        title: "Please check the form",
+        description: parsed.error.issues[0]?.message || "Some fields need attention.",
+        variant: "destructive",
+      });
       return;
     }
+
+    const limitError = checkRateLimit();
+    if (limitError) {
+      toast({ title: "Rate limit", description: limitError, variant: "destructive" });
+      return;
+    }
+
     setErrors({});
     try {
       await submitMessage.mutateAsync(parsed.data as any);
+      const now = Date.now();
+      localStorage.setItem(RATE_LIMIT_KEY, String(now));
+      localStorage.setItem(
+        RATE_LIMIT_COUNT_KEY,
+        String(Number(localStorage.getItem(RATE_LIMIT_COUNT_KEY) || 0) + 1)
+      );
       setSubmitted(true);
       setForm({ name: "", email: "", subject: "", message: "" });
       toast({ title: "Message sent", description: "I'll reply within 24 hours." });
     } catch (err: any) {
-      toast({ title: "Something went wrong", description: err.message, variant: "destructive" });
+      toast({
+        title: "Couldn't send message",
+        description: err?.message || "Please try again in a moment.",
+        variant: "destructive",
+      });
     }
   };
 

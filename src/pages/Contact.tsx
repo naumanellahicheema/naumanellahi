@@ -257,6 +257,19 @@ export default function Contact() {
               </motion.div>
             ) : (
               <form onSubmit={handleSubmit} className="border border-foreground/15 rounded-3xl p-6 sm:p-10 bg-background space-y-6">
+                {/* Honeypot — hidden from users, bots will fill it */}
+                <div aria-hidden="true" className="absolute -left-[9999px] w-px h-px overflow-hidden opacity-0 pointer-events-none">
+                  <label>
+                    Website (leave blank)
+                    <input
+                      type="text"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={honeypot}
+                      onChange={(e) => setHoneypot(e.target.value)}
+                    />
+                  </label>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <Field label="Name" error={errors.name}>
                     <input

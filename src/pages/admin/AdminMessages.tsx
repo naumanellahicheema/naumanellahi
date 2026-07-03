@@ -85,7 +85,7 @@ export default function AdminMessages() {
             Inbox
           </h1>
           <p className="text-sm mt-1" style={{ color: "hsl(var(--admin-muted-fg))" }}>
-            {totalCount} messages • {unreadCount} unread
+            {totalCount} messages • {unreadCount} unread • {unrepliedCount} awaiting reply
           </p>
         </div>
       </div>
@@ -102,15 +102,21 @@ export default function AdminMessages() {
             className="admin-input-bordered pl-10 w-full"
           />
         </div>
-        <div className="flex gap-2">
-          {(["all", "unread", "read"] as const).map((f) => (
+        <div className="flex gap-2 flex-wrap">
+          {([
+            ["all", "All"],
+            ["unread", `Unread (${unreadCount})`],
+            ["read", "Read"],
+            ["unreplied", `To reply (${unrepliedCount})`],
+            ["replied", "Replied"],
+          ] as const).map(([f, label]) => (
             <button
               key={f}
-              onClick={() => setFilter(f)}
+              onClick={() => setFilter(f as any)}
               className={`px-4 py-2 text-sm rounded-lg transition-colors ${filter === f ? "bg-gray-900 text-white" : "bg-gray-100 hover:bg-gray-200"}`}
               style={filter === f ? {} : { color: "hsl(var(--admin-fg))" }}
             >
-              {f === "all" ? "All" : f === "unread" ? `Unread (${unreadCount})` : "Read"}
+              {label}
             </button>
           ))}
         </div>

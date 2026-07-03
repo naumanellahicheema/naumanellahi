@@ -22,6 +22,29 @@ export default function AdminProjects() {
   const [isNew, setIsNew] = useState(false);
   const [autoUrl, setAutoUrl] = useState("");
   const [autoLoading, setAutoLoading] = useState(false);
+  const [refineText, setRefineText] = useState("");
+  const [refineLoading, setRefineLoading] = useState(false);
+
+  const handleRefine = async () => {
+    const instructions = refineText.trim();
+    if (!instructions) { toast({ title: "Type your suggestions first", variant: "destructive" }); return; }
+    if (!editing) return;
+    setRefineLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-fill-project", {
+        body: { mode: "refine", current: editing, instructions },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Refine failed");
+      setEditing((prev: any) => ({ ...(prev || {}), ...data.data }));
+      setRefineText("");
+      toast({ title: "✨ Fields updated by AI", description: "Review the changes and Save." });
+    } catch (e: any) {
+      toast({ title: "Refine failed", description: e.message || String(e), variant: "destructive" });
+    } finally {
+      setRefineLoading(false);
+    }
+  };
 
   const handleAutoFill = async () => {
     const url = autoUrl.trim();

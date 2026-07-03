@@ -314,41 +314,65 @@ async function fetchExtras(baseUrl: string, mainHtml: string): Promise<{ text: s
 }
 
 
-async function fetchMicrolink(url: string, waitMs = 5000) {
-  const scrollScript = `async () => {
-    await new Promise(r => setTimeout(r, 1200));
-    window.scrollTo(0, 300); await new Promise(r => setTimeout(r, 500));
-    window.scrollTo(0, 0);   await new Promise(r => setTimeout(r, 400));
-    document.querySelectorAll('video').forEach(v => { try { v.muted = true; v.play().catch(()=>{}); } catch(_) {} });
-    // Wait for <img> in viewport to actually finish decoding
-    const imgs = Array.from(document.querySelectorAll('img')).slice(0, 30);
-    await Promise.all(imgs.map(img => img.complete ? null : new Promise(res => { img.onload = img.onerror = () => res(null); setTimeout(res, 3000); })));
-    await new Promise(r => setTimeout(r, ${waitMs}));
-  }`;
+async function fetchMicrolink(url: string, waitMs = 3000) {
+  // Microlink free tier: `waitUntil=networkidle0` on media-heavy sites hits 27s browser timeout.
+  // Use `load` + a `screenshot.waitFor` (capped at 5000ms — the free-tier ceiling) instead.
+  const capped = Math.min(Math.max(waitMs, 1500), 5000);
   const params = new URLSearchParams({
     url,
     screenshot: "true", meta: "true", palette: "false", audio: "false", video: "false",
     "viewport.width": "1440", "viewport.height": "900", "viewport.deviceScaleFactor": "2",
-    "screenshot.type": "jpeg", "screenshot.fullPage": "false", "screenshot.overlay.browser": "false",
-    "screenshot.waitFor": String(Math.min(waitMs, 5000)),
-    waitUntil: "networkidle0",
-    waitFor: String(waitMs + 5000),
+    "screenshot.type": "jpeg", "screenshot.fullPage": "false",
+    "screenshot.overlay.browser": "false",
+    "screenshot.waitFor": String(capped),
+    waitUntil: "load",
     device: "macbook pro 15",
-    scripts: scrollScript,
   });
-  const r = await fetch(`https://api.microlink.io/?${params.toString()}`);
-  const j = await r.json().catch(() => ({}));
-  if (j?.status !== "success") return { screenshot: null, meta: {} as any };
-  const d = j.data || {};
-  return {
-    screenshot: d.screenshot?.url || null,
-    meta: {
-      title: d.title || "", description: d.description || "",
-      publisher: d.publisher || "", logo: d.logo?.url || "",
-      image: d.image?.url || "", lang: d.lang || "", author: d.author || "",
-    },
-  };
+  try {
+    const r = await fetch(`https://api.microlink.io/?${params.toString()}`, {
+      signal: AbortSignal.timeout(45000),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (j?.status !== "success") {
+      console.log("microlink non-success:", j?.status, j?.code, j?.data?.url || j?.message || "");
+      // Fallback: try minimal params (no waitFor script) — often succeeds when the fuller call times out
+      const min = new URLSearchParams({
+        url, screenshot: "true", meta: "true",
+        "viewport.width": "1440", "viewport.height": "900",
+        "screenshot.type": "jpeg", "screenshot.overlay.browser": "false",
+      });
+      const r2 = await fetch(`https://api.microlink.io/?${min.toString()}`, { signal: AbortSignal.timeout(30000) });
+      const j2 = await r2.json().catch(() => ({}));
+      if (j2?.status !== "success") {
+        console.log("microlink fallback non-success:", j2?.status, j2?.code);
+        return { screenshot: null, meta: {} as any };
+      }
+      const d2 = j2.data || {};
+      return {
+        screenshot: d2.screenshot?.url || null,
+        meta: {
+          title: d2.title || "", description: d2.description || "",
+          publisher: d2.publisher || "", logo: d2.logo?.url || "",
+          image: d2.image?.url || "", lang: d2.lang || "", author: d2.author || "",
+        },
+      };
+    }
+    const d = j.data || {};
+    return {
+      screenshot: d.screenshot?.url || null,
+      meta: {
+        title: d.title || "", description: d.description || "",
+        publisher: d.publisher || "", logo: d.logo?.url || "",
+        image: d.image?.url || "", lang: d.lang || "", author: d.author || "",
+      },
+    };
+  } catch (e) {
+    console.log("microlink fetch error:", String(e));
+    return { screenshot: null, meta: {} as any };
+  }
 }
+
+
 
 async function fetchRawHtml(url: string): Promise<{ html: string; headers: Headers }> {
   try {

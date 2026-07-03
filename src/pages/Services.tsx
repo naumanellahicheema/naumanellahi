@@ -166,7 +166,9 @@ export default function Services() {
             className="grid grid-cols-1 lg:grid-cols-12 gap-8 border border-foreground/15 rounded-3xl overflow-hidden bg-background"
           >
             <div className="lg:col-span-7 p-8 sm:p-12">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-foreground/50 mb-4">Track 01 · Flagship</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-foreground/50 mb-4">
+                Track 01 · Flagship{primary.category ? ` · ${primary.category}` : ""}
+              </div>
               <h2 className="display-h2 text-3xl sm:text-4xl md:text-5xl mb-5 leading-tight">
                 {primary.title}
               </h2>

@@ -258,6 +258,9 @@ export default function Services() {
                       <div className="w-9 h-9 rounded-lg bg-foreground/5 flex items-center justify-center"><Icon size={16} /></div>
                       <h3 className="font-display text-xl sm:text-2xl">{s.title}</h3>
                     </div>
+                    {s.category && (
+                      <div className="text-[10px] font-mono uppercase tracking-widest text-foreground/50 mb-2">{s.category}</div>
+                    )}
                     <p className="text-sm text-foreground/60 leading-relaxed">{s.short_description || s.description}</p>
                   </div>
                   <div className="col-span-12 sm:col-span-5">

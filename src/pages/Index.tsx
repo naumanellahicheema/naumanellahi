@@ -70,9 +70,11 @@ function Hero({ profile, settings }: any) {
             <span className="block">I build</span>
             <span className="block">
               <span className="accent-underline">secure</span>{" "}
-              <span className="font-serif-italic text-foreground/70">web apps</span>
+              <span className="font-serif-italic text-foreground/40">web apps</span>
             </span>
-            <span className="block">that ship.</span>
+            <span className="block">
+              that <span className="accent-underline">ship.</span>
+            </span>
           </h1>
 
           <p className="mt-8 max-w-xl text-base sm:text-lg text-foreground/70 leading-relaxed">

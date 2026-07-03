@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import { useAllProjects, useCreateProject, useUpdateProject, useDeleteProject } from "@/hooks/usePortfolioData";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Save, X, ExternalLink, Eye, EyeOff, Star, Globe } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Plus, Edit, Trash2, Save, X, ExternalLink, Eye, EyeOff, Star, Globe, Sparkles, Loader2 } from "lucide-react";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { TagInput } from "@/components/ui/TagInput";
 
@@ -19,6 +20,25 @@ export default function AdminProjects() {
   const { toast } = useToast();
   const [editing, setEditing] = useState<any>(null);
   const [isNew, setIsNew] = useState(false);
+  const [autoUrl, setAutoUrl] = useState("");
+  const [autoLoading, setAutoLoading] = useState(false);
+
+  const handleAutoFill = async () => {
+    const url = autoUrl.trim();
+    if (!url) { toast({ title: "Enter a website URL first", variant: "destructive" }); return; }
+    setAutoLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-fill-project", { body: { url } });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Failed to analyze site");
+      setEditing((prev: any) => ({ ...(prev || emptyProject), ...data.data }));
+      toast({ title: "✨ Auto-filled from website!", description: "Review the fields and click Save." });
+    } catch (e: any) {
+      toast({ title: "Auto-fill failed", description: e.message || String(e), variant: "destructive" });
+    } finally {
+      setAutoLoading(false);
+    }
+  };
 
   const handleFieldChange = useCallback((field: string, value: any) => {
     setEditing((prev: any) => prev ? { ...prev, [field]: value } : null);
@@ -79,6 +99,30 @@ export default function AdminProjects() {
               <button onClick={() => { setEditing(null); setIsNew(false); }} className="p-2 rounded-lg hover:bg-gray-100" style={{ border: "1px solid hsl(var(--admin-border))" }}><X size={20} /></button>
             </div>
             <div className="space-y-6">
+              <div className="rounded-xl p-4" style={{ background: "hsl(var(--admin-muted))", border: "2px dashed hsl(var(--admin-border))" }}>
+                <label className="admin-label flex items-center gap-2"><Sparkles size={14} /> Auto-fill from live URL (AI)</label>
+                <div className="flex gap-2 mt-2">
+                  <input
+                    type="url"
+                    value={autoUrl}
+                    onChange={(e) => setAutoUrl(e.target.value)}
+                    placeholder="https://your-project-site.com"
+                    className="admin-input-bordered flex-1"
+                    disabled={autoLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAutoFill}
+                    disabled={autoLoading}
+                    className="admin-btn-bordered whitespace-nowrap"
+                  >
+                    {autoLoading ? <><Loader2 size={16} className="animate-spin" /> Analyzing…</> : <><Sparkles size={16} /> Auto-fill</>}
+                  </button>
+                </div>
+                <p className="text-xs mt-2" style={{ color: "hsl(var(--admin-muted-fg))" }}>
+                  Paste any live project URL. AI will scrape the site, capture a hero screenshot, and fill every field below. Review and Save.
+                </p>
+              </div>
               <div><label className="admin-label">Thumbnail</label><ImageUpload value={editing.thumbnail_url} onChange={(url) => handleFieldChange("thumbnail_url", url)} onRemove={() => handleFieldChange("thumbnail_url", "")} folder="projects" /></div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div><label className="admin-label">Title *</label><input type="text" value={editing.title || ""} onChange={(e) => handleFieldChange("title", e.target.value)} className="admin-input-bordered" placeholder="Project title" /></div>

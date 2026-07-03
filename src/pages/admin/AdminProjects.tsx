@@ -20,8 +20,25 @@ export default function AdminProjects() {
   const { toast } = useToast();
   const [editing, setEditing] = useState<any>(null);
   const [isNew, setIsNew] = useState(false);
+  const [autoUrl, setAutoUrl] = useState("");
+  const [autoLoading, setAutoLoading] = useState(false);
 
-  const handleFieldChange = useCallback((field: string, value: any) => {
+  const handleAutoFill = async () => {
+    const url = autoUrl.trim();
+    if (!url) { toast({ title: "Enter a website URL first", variant: "destructive" }); return; }
+    setAutoLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-fill-project", { body: { url } });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Failed to analyze site");
+      setEditing((prev: any) => ({ ...(prev || emptyProject), ...data.data }));
+      toast({ title: "✨ Auto-filled from website!", description: "Review the fields and click Save." });
+    } catch (e: any) {
+      toast({ title: "Auto-fill failed", description: e.message || String(e), variant: "destructive" });
+    } finally {
+      setAutoLoading(false);
+    }
+  };
     setEditing((prev: any) => prev ? { ...prev, [field]: value } : null);
   }, []);
 

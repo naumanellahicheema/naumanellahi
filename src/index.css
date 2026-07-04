@@ -256,17 +256,16 @@
     background: hsl(var(--admin-muted));
     color: hsl(var(--admin-fg));
   }
-  .admin-nav-item.active {
-    background: hsl(var(--admin-accent));
-    color: hsl(var(--admin-accent-fg));
+  .admin-nav-item.active,
+  .admin-nav-item.active:hover {
+    background: hsl(var(--admin-accent)) !important;
+    color: hsl(var(--admin-accent-fg)) !important;
     box-shadow: var(--admin-shadow-md);
   }
-  .admin-nav-item.active::before {
-    content: "";
-    position: absolute;
-    left: -12px; top: 20%; bottom: 20%;
-    width: 3px; border-radius: 2px;
-    background: hsl(var(--admin-accent));
+  .admin-nav-item.active *,
+  .admin-nav-item.active span,
+  .admin-nav-item.active svg {
+    color: hsl(var(--admin-accent-fg)) !important;
   }
 
   .admin-btn,

@@ -192,7 +192,8 @@ export default function AdminProjects() {
                 <textarea
                   value={refineText}
                   onChange={(e) => setRefineText(e.target.value)}
-                  placeholder="e.g. Make the description more concise, fix grammar, change industry to Healthcare, add Next.js to tech stack, rewrite title to be catchier…"
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !refineLoading && refineText.trim()) { e.preventDefault(); handleRefine(); } }}
+                  placeholder="e.g. Make the description more concise, fix grammar, change industry to Healthcare, add Next.js to tech stack, rewrite title to be catchier… (Enter to apply, Shift+Enter for newline)"
                   className="admin-input-bordered resize-none w-full mt-2"
                   rows={3}
                   disabled={refineLoading}

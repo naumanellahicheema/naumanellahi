@@ -157,6 +157,7 @@ export default function AdminProjects() {
                     type="url"
                     value={autoUrl}
                     onChange={(e) => setAutoUrl(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !autoLoading && autoUrl.trim()) { e.preventDefault(); handleAutoFill(); } }}
                     placeholder="https://your-project-site.com"
                     className="admin-input-bordered flex-1"
                     disabled={autoLoading}

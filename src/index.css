@@ -29,22 +29,29 @@
     --ring: 0 0% 50%;
     --radius: 0.75rem;
     --glow-primary: 0 0% 5%;
-    --admin-bg: 0 0% 100%;
-    --admin-fg: 0 0% 5%;
-    --admin-card: 0 0% 98%;
-    --admin-border: 0 0% 85%;
-    --admin-muted: 0 0% 95%;
-    --admin-muted-fg: 0 0% 40%;
-    --admin-accent: 0 0% 5%;
+    --admin-bg: 0 0% 98.8%;
+    --admin-surface: 0 0% 100%;
+    --admin-fg: 0 0% 8%;
+    --admin-card: 0 0% 100%;
+    --admin-border: 0 0% 90%;
+    --admin-border-strong: 0 0% 82%;
+    --admin-muted: 0 0% 96%;
+    --admin-muted-fg: 0 0% 42%;
+    --admin-accent: 0 0% 8%;
     --admin-accent-fg: 0 0% 100%;
-    --sidebar-background: 0 0% 98%;
+    --admin-ring: 0 0% 8%;
+    --admin-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px -1px rgb(0 0 0 / 0.06);
+    --admin-shadow-md: 0 4px 10px -2px rgb(0 0 0 / 0.06), 0 2px 6px -1px rgb(0 0 0 / 0.04);
+    --admin-shadow-lg: 0 20px 40px -12px rgb(0 0 0 / 0.10), 0 8px 20px -8px rgb(0 0 0 / 0.06);
+    --admin-glass: linear-gradient(180deg, hsl(0 0% 100% / 0.85), hsl(0 0% 100% / 0.65));
+    --sidebar-background: 0 0% 98.8%;
     --sidebar-foreground: 0 0% 20%;
-    --sidebar-primary: 0 0% 5%;
+    --sidebar-primary: 0 0% 8%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 92%;
-    --sidebar-accent-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 0 0% 8%;
     --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 0 0% 50%;
+    --sidebar-ring: 0 0% 8%;
   }
 }
 

@@ -98,7 +98,7 @@ export default function AdminMedia() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="admin-page-header">
         <h1 className="text-2xl font-display font-bold" style={{ color: "hsl(var(--admin-fg))" }}>Media Library</h1>
       </div>
 

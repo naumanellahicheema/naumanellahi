@@ -137,7 +137,7 @@ export default function AdminProjects() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="admin-page-header">
         <h1 className="text-2xl font-display font-bold" style={{ color: "hsl(var(--admin-fg))" }}>Projects</h1>
         <button onClick={() => { setEditing({ ...emptyProject }); setIsNew(true); }} className="admin-btn-bordered"><Plus size={16} /> Add Project</button>
       </div>

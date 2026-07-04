@@ -79,7 +79,7 @@ export default function AdminUsers() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="admin-page-header">
         <h1 className="text-2xl font-display font-bold" style={{ color: "hsl(var(--admin-fg))" }}>Users & Roles</h1>
         <button onClick={() => setShowCreateUser(true)} className="admin-btn"><Plus size={16} /> Add Admin</button>
       </div>

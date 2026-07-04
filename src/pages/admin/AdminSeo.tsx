@@ -112,7 +112,7 @@ export default function AdminSeo() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+      <div className="admin-page-header">
         <h1 className="text-2xl font-display font-bold" style={{ color: "hsl(var(--admin-fg))" }}>SEO Management</h1>
         <button onClick={handleGenerateAll} disabled={generating} className="admin-btn">
           {generating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}

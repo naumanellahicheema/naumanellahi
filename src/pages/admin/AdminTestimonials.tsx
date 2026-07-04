@@ -69,7 +69,7 @@ export default function AdminTestimonials() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="admin-page-header">
         <h1 className="text-2xl font-display font-bold" style={{ color: "hsl(var(--admin-fg))" }}>Testimonials</h1>
         <button onClick={startNew} className="admin-btn"><Plus size={16} /> Add Testimonial</button>
       </div>

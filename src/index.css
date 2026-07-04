@@ -342,35 +342,101 @@
     letter-spacing: 0.06em;
   }
 
-  .admin-table { @apply w-full text-sm; }
+  /* Tables — premium editorial rows */
+  .admin-table { @apply w-full text-sm border-separate; border-spacing: 0; }
   .admin-table th {
-    @apply text-left px-4 py-3 text-xs font-semibold tracking-wide uppercase border-b;
+    @apply text-left px-4 py-3 text-[11px] font-semibold tracking-[0.08em] uppercase;
     color: hsl(var(--admin-muted-fg));
-    border-color: hsl(var(--admin-border));
-    letter-spacing: 0.05em;
-    background: hsl(var(--admin-muted));
+    border-bottom: 1px solid hsl(var(--admin-border));
+    background: linear-gradient(180deg, hsl(0 0% 99%), hsl(0 0% 96%));
   }
+  .admin-table th:first-child { border-top-left-radius: 14px; }
+  .admin-table th:last-child { border-top-right-radius: 14px; }
   .admin-table td {
-    @apply px-4 py-4 border-b;
-    border-color: hsl(var(--admin-border));
+    @apply px-4 py-4;
+    border-bottom: 1px solid hsl(var(--admin-border));
+    color: hsl(var(--admin-fg));
+    transition: background .2s ease;
   }
-  .admin-table tr:hover td { background: hsl(var(--admin-muted) / 0.5); }
+  .admin-table tbody tr:last-child td { border-bottom: 0; }
+  .admin-table tbody tr:hover td { background: hsl(0 0% 0% / 0.025); }
 
+  /* Generic list row (for message lists, media grids etc.) */
+  .admin-row {
+    @apply flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200;
+    background: hsl(var(--admin-surface));
+    border: 1px solid hsl(var(--admin-border));
+    box-shadow: 0 1px 2px hsl(0 0% 0% / 0.03);
+  }
+  .admin-row:hover {
+    border-color: hsl(var(--admin-border-strong));
+    box-shadow: 0 6px 14px -8px hsl(0 0% 0% / 0.15);
+    transform: translateY(-1px);
+  }
+  .admin-row.is-unread { background: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 97%)); }
+
+  /* Badges — refined luxe pills */
   .admin-badge {
-    @apply inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full;
-    background: hsl(var(--admin-muted));
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full;
+    background: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 96%));
     border: 1px solid hsl(var(--admin-border));
+    color: hsl(var(--admin-fg));
+    box-shadow: 0 1px 2px hsl(0 0% 0% / 0.04);
+    letter-spacing: 0.02em;
   }
+  .admin-badge-dark {
+    background: hsl(var(--admin-accent));
+    border-color: hsl(var(--admin-accent));
+    color: hsl(var(--admin-accent-fg));
+  }
+  .admin-badge-success { background: hsl(142 65% 96%); border-color: hsl(142 55% 78%); color: hsl(142 65% 24%); }
+  .admin-badge-danger  { background: hsl(0 80% 97%); border-color: hsl(0 70% 82%); color: hsl(0 72% 40%); }
 
+  /* Toggle switch */
   .admin-toggle {
-    @apply relative inline-flex h-6 w-11 items-center rounded-full transition-colors;
+    @apply relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200;
     border: 1px solid hsl(var(--admin-border));
+    box-shadow: inset 0 1px 2px hsl(0 0% 0% / 0.06);
   }
   .admin-toggle[data-state="checked"] {
     background: hsl(var(--admin-accent));
     border-color: hsl(var(--admin-accent));
+    box-shadow: 0 2px 6px -1px hsl(0 0% 0% / 0.25);
   }
   .admin-toggle[data-state="unchecked"] { background: hsl(var(--admin-muted)); }
+
+  /* Empty state */
+  .admin-empty {
+    @apply flex flex-col items-center justify-center text-center gap-3 py-16 px-6 rounded-2xl;
+    background: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    border: 1px dashed hsl(var(--admin-border-strong));
+    color: hsl(var(--admin-muted-fg));
+  }
+  .admin-empty .admin-empty-icon {
+    @apply grid place-items-center w-14 h-14 rounded-2xl mb-1;
+    background: linear-gradient(180deg, hsl(0 0% 98%), hsl(0 0% 94%));
+    border: 1px solid hsl(var(--admin-border));
+    color: hsl(var(--admin-fg));
+  }
+
+  /* Validation error text */
+  .admin-error {
+    @apply text-xs font-medium mt-1.5 flex items-center gap-1.5;
+    color: hsl(0 72% 45%);
+  }
+
+  /* File upload dropzone */
+  .admin-dropzone {
+    @apply relative flex flex-col items-center justify-center gap-2 py-10 px-6 rounded-2xl cursor-pointer transition-all duration-200 text-center;
+    background: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    border: 1.5px dashed hsl(var(--admin-border-strong));
+    color: hsl(var(--admin-muted-fg));
+  }
+  .admin-dropzone:hover {
+    border-color: hsl(var(--admin-accent));
+    color: hsl(var(--admin-fg));
+    box-shadow: 0 10px 28px -18px hsl(0 0% 0% / 0.25);
+  }
 
   .admin-kbd {
     @apply inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded-md;
@@ -378,6 +444,167 @@
     border: 1px solid hsl(var(--admin-border));
     color: hsl(var(--admin-muted-fg));
     box-shadow: 0 1px 0 hsl(var(--admin-border));
+  }
+
+  /* =========================================================
+     GLOBAL POLISH INSIDE THE ADMIN CONTAINER
+     Applies to native form controls, native tables, and any
+     stray hardcoded gray utilities without touching page files.
+     ========================================================= */
+  .admin-container select,
+  .admin-container textarea,
+  .admin-container input[type="text"],
+  .admin-container input[type="email"],
+  .admin-container input[type="url"],
+  .admin-container input[type="password"],
+  .admin-container input[type="search"],
+  .admin-container input[type="tel"],
+  .admin-container input[type="number"],
+  .admin-container input[type="date"],
+  .admin-container input[type="datetime-local"] {
+    background: hsl(var(--admin-surface));
+    border: 1px solid hsl(var(--admin-border));
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: hsl(var(--admin-fg));
+    box-shadow: inset 0 1px 2px hsl(0 0% 0% / 0.03);
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    outline: none;
+  }
+  .admin-container select:hover,
+  .admin-container textarea:hover,
+  .admin-container input[type="text"]:hover,
+  .admin-container input[type="email"]:hover,
+  .admin-container input[type="url"]:hover,
+  .admin-container input[type="password"]:hover,
+  .admin-container input[type="search"]:hover,
+  .admin-container input[type="number"]:hover {
+    border-color: hsl(var(--admin-border-strong));
+  }
+  .admin-container select:focus,
+  .admin-container textarea:focus,
+  .admin-container input:focus {
+    border-color: hsl(var(--admin-ring)) !important;
+    box-shadow: 0 0 0 4px hsl(0 0% 0% / 0.08), inset 0 1px 2px hsl(0 0% 0% / 0.03) !important;
+  }
+  .admin-container select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+  .admin-container input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 6px;
+    border: 1.5px solid hsl(var(--admin-border-strong));
+    background: hsl(var(--admin-surface));
+    display: inline-grid; place-content: center;
+    transition: all .2s ease;
+    cursor: pointer;
+    box-shadow: inset 0 1px 2px hsl(0 0% 0% / 0.06);
+  }
+  .admin-container input[type="checkbox"]:hover { border-color: hsl(var(--admin-accent)); }
+  .admin-container input[type="checkbox"]:checked {
+    background: hsl(var(--admin-accent));
+    border-color: hsl(var(--admin-accent));
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>");
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .admin-container input[type="radio"] {
+    appearance: none; -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid hsl(var(--admin-border-strong));
+    background: hsl(var(--admin-surface));
+    display: inline-grid; place-content: center;
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .admin-container input[type="radio"]:checked {
+    border-color: hsl(var(--admin-accent));
+  }
+  .admin-container input[type="radio"]:checked::after {
+    content: ""; width: 9px; height: 9px; border-radius: 50%;
+    background: hsl(var(--admin-accent));
+  }
+  .admin-container input[type="file"] {
+    font-size: 13px;
+    color: hsl(var(--admin-muted-fg));
+  }
+  .admin-container input[type="file"]::file-selector-button {
+    background: hsl(var(--admin-accent));
+    color: hsl(var(--admin-accent-fg));
+    border: 0;
+    border-radius: 10px;
+    padding: 8px 14px;
+    margin-right: 12px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: opacity .2s ease, transform .2s ease;
+  }
+  .admin-container input[type="file"]::file-selector-button:hover { opacity: .9; transform: translateY(-1px); }
+  .admin-container input[aria-invalid="true"],
+  .admin-container textarea[aria-invalid="true"],
+  .admin-container select[aria-invalid="true"] {
+    border-color: hsl(0 72% 55%) !important;
+    box-shadow: 0 0 0 4px hsl(0 72% 55% / 0.14) !important;
+  }
+
+  /* Native table under .admin-container gets the same polish (in case a page skips .admin-table) */
+  .admin-container main table:not(.admin-table) {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: hsl(var(--admin-surface));
+    border: 1px solid hsl(var(--admin-border));
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px -18px hsl(0 0% 0% / 0.18);
+  }
+  .admin-container main table:not(.admin-table) th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: hsl(var(--admin-muted-fg));
+    background: linear-gradient(180deg, hsl(0 0% 99%), hsl(0 0% 96%));
+    border-bottom: 1px solid hsl(var(--admin-border));
+  }
+  .admin-container main table:not(.admin-table) td {
+    padding: 14px 16px;
+    border-bottom: 1px solid hsl(var(--admin-border));
+    font-size: 14px;
+  }
+  .admin-container main table:not(.admin-table) tbody tr:last-child td { border-bottom: 0; }
+  .admin-container main table:not(.admin-table) tbody tr:hover td { background: hsl(0 0% 0% / 0.025); }
+
+  /* Modal panels — many pages layer inline background over .admin-card. Lift that. */
+  .admin-container .fixed.inset-0 > .admin-card,
+  .admin-container .fixed.inset-0 > div.rounded-xl,
+  .admin-container .fixed.inset-0 > div[class*="max-w-"] {
+    background: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98.5%)) !important;
+    border: 1px solid hsl(var(--admin-border)) !important;
+    border-radius: 22px !important;
+    box-shadow:
+      0 1px 0 hsl(0 0% 100%) inset,
+      0 30px 80px -20px hsl(0 0% 0% / 0.35),
+      0 10px 20px -10px hsl(0 0% 0% / 0.15) !important;
+  }
+
+  /* Modal overlay — subtle blur */
+  .admin-container .fixed.inset-0.bg-black\/50 {
+    background: hsl(0 0% 0% / 0.35) !important;
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
   }
 
   /* Page loading animation */

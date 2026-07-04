@@ -118,8 +118,12 @@
   /* Button Styles - Enhanced with micro-interactions */
   .btn-hero {
     @apply inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold bg-primary text-primary-foreground rounded-full transition-all duration-300 ease-out;
+    background: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+    border: 1px solid hsl(var(--primary));
     box-shadow: 0 4px 14px rgba(0,0,0,0.1);
   }
+  .btn-hero :where(span, svg) { color: inherit; }
   .btn-hero:hover { 
     transform: translateY(-2px) scale(1.02); 
     box-shadow: 0 8px 30px rgba(0,0,0,0.15); 
@@ -130,7 +134,9 @@
   
   .btn-outline-hero {
     @apply inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold bg-transparent text-foreground border-2 border-foreground/30 rounded-full transition-all duration-300 ease-out;
+    color: hsl(var(--foreground)) !important;
   }
+  .btn-outline-hero :where(span, svg) { color: inherit; }
   .btn-outline-hero:hover { 
     @apply bg-foreground/10 border-foreground/50; 
     transform: translateY(-2px);
@@ -271,11 +277,14 @@
   .admin-btn,
   .admin-btn-bordered {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200;
-    background: hsl(var(--admin-accent));
-    color: hsl(var(--admin-accent-fg));
-    border: 1px solid hsl(var(--admin-accent));
+    background: hsl(var(--admin-accent)) !important;
+    color: hsl(var(--admin-accent-fg)) !important;
+    border: 1px solid hsl(var(--admin-accent)) !important;
+    border-radius: 14px;
     box-shadow: var(--admin-shadow-sm);
   }
+  .admin-btn :where(span, svg),
+  .admin-btn-bordered :where(span, svg) { color: inherit; }
   .admin-btn:hover,
   .admin-btn-bordered:hover {
     transform: translateY(-1px);
@@ -283,19 +292,23 @@
   }
   .admin-btn:disabled,
   .admin-btn-bordered:disabled {
-    opacity: 0.55;
+    opacity: 1;
+    background: linear-gradient(180deg, hsl(0 0% 92%), hsl(0 0% 86%)) !important;
+    color: hsl(0 0% 34%) !important;
+    border-color: hsl(var(--admin-border-strong)) !important;
     cursor: not-allowed;
     transform: none;
-    box-shadow: none;
+    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.75);
   }
 
   .admin-btn-outline {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200;
-    background: hsl(var(--admin-surface));
-    color: hsl(var(--admin-fg));
-    border: 1px solid hsl(var(--admin-border));
+    background: hsl(var(--admin-surface)) !important;
+    color: hsl(var(--admin-fg)) !important;
+    border: 1px solid hsl(var(--admin-border)) !important;
     box-shadow: var(--admin-shadow-sm);
   }
+  .admin-btn-outline :where(span, svg) { color: inherit; }
   .admin-btn-outline:hover {
     background: hsl(var(--admin-muted));
     border-color: hsl(var(--admin-border-strong));
@@ -588,8 +601,7 @@
 
   /* Modal panels — many pages layer inline background over .admin-card. Lift that. */
   .admin-container .fixed.inset-0 > .admin-card,
-  .admin-container .fixed.inset-0 > div.rounded-xl,
-  .admin-container .fixed.inset-0 > div[class*="max-w-"] {
+  .admin-container .fixed.inset-0 > div.rounded-xl:not(button) {
     background: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98.5%)) !important;
     border: 1px solid hsl(var(--admin-border)) !important;
     border-radius: 22px !important;
@@ -597,6 +609,16 @@
       0 1px 0 hsl(0 0% 100%) inset,
       0 30px 80px -20px hsl(0 0% 0% / 0.35),
       0 10px 20px -10px hsl(0 0% 0% / 0.15) !important;
+  }
+
+  /* Keep nested button labels/icons readable despite global text utilities and modal surface overrides. */
+  .admin-container button :where(span, svg),
+  .admin-container [role="button"] :where(span, svg),
+  button.btn-hero :where(span, svg),
+  a.btn-hero :where(span, svg),
+  button.btn-outline-hero :where(span, svg),
+  a.btn-outline-hero :where(span, svg) {
+    color: inherit;
   }
 
   /* Modal overlay — subtle blur */

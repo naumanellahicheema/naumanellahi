@@ -349,7 +349,7 @@ async function fetchMicrolink(url: string, waitMs = 3000) {
       }
       const d2 = j2.data || {};
       return {
-        screenshot: d2.screenshot?.url || null,
+        screenshot: d2.screenshot?.url || buildFallbackScreenshotUrl(url, waitMs),
         meta: {
           title: d2.title || "", description: d2.description || "",
           publisher: d2.publisher || "", logo: d2.logo?.url || "",
@@ -359,7 +359,7 @@ async function fetchMicrolink(url: string, waitMs = 3000) {
     }
     const d = j.data || {};
     return {
-      screenshot: d.screenshot?.url || null,
+      screenshot: d.screenshot?.url || buildFallbackScreenshotUrl(url, waitMs),
       meta: {
         title: d.title || "", description: d.description || "",
         publisher: d.publisher || "", logo: d.logo?.url || "",

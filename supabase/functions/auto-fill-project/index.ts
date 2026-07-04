@@ -345,7 +345,7 @@ async function fetchMicrolink(url: string, waitMs = 3000) {
       const j2 = await r2.json().catch(() => ({}));
       if (j2?.status !== "success") {
         console.log("microlink fallback non-success:", j2?.status, j2?.code);
-        return { screenshot: null, meta: {} as any };
+        return { screenshot: buildFallbackScreenshotUrl(url, waitMs), meta: {} as any };
       }
       const d2 = j2.data || {};
       return {
@@ -368,8 +368,31 @@ async function fetchMicrolink(url: string, waitMs = 3000) {
     };
   } catch (e) {
     console.log("microlink fetch error:", String(e));
-    return { screenshot: null, meta: {} as any };
+    return { screenshot: buildFallbackScreenshotUrl(url, waitMs), meta: {} as any };
   }
+}
+
+function buildFallbackScreenshotUrl(url: string, waitMs = 3000): string {
+  const waitSeconds = Math.max(1, Math.min(5, Math.round(waitMs / 1000)));
+  return `https://image.thum.io/get/width/1440/crop/900/wait/${waitSeconds}/noanimate/${encodeURIComponent(url)}`;
+}
+
+function extensionForMime(mime: string): string {
+  if (/png/i.test(mime)) return "png";
+  if (/webp/i.test(mime)) return "webp";
+  if (/gif/i.test(mime)) return "gif";
+  return "jpg";
+}
+
+function base64ToBytes(dataUrl: string): { bytes: Uint8Array; mime: string } {
+  const trimmed = String(dataUrl || "").trim();
+  const match = trimmed.match(/^data:([^;,]+);base64,(.+)$/i);
+  const mime = match?.[1] || "image/jpeg";
+  const base64 = (match?.[2] || trimmed).replace(/\s/g, "");
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return { bytes, mime };
 }
 
 
@@ -443,8 +466,37 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const mode: "scrape" | "refine" | "screenshot" = 
-      body?.mode === "refine" ? "refine" : body?.mode === "screenshot" ? "screenshot" : "scrape";
+    const mode: "scrape" | "refine" | "screenshot" | "upload" = 
+      body?.mode === "refine" ? "refine" : body?.mode === "screenshot" ? "screenshot" : body?.mode === "upload" ? "upload" : "scrape";
+
+    // ------- ADMIN STORAGE UPLOAD FALLBACK -------
+    if (mode === "upload") {
+      const dataUrl = String(body?.dataUrl || "");
+      const folder = String(body?.folder || "uploads").replace(/[^a-z0-9/_-]/gi, "").replace(/^\/+|\/+$/g, "") || "uploads";
+      if (!dataUrl) {
+        return new Response(JSON.stringify({ error: "Missing image data" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { bytes, mime } = base64ToBytes(dataUrl);
+      if (!/^image\//i.test(mime) || bytes.length > 10 * 1024 * 1024) {
+        return new Response(JSON.stringify({ error: "Only images up to 10MB are allowed" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const ext = extensionForMime(mime);
+      const filePath = `${folder}/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await admin.storage.from("media").upload(filePath, bytes, {
+        contentType: mime,
+        upsert: true,
+      });
+      if (uploadError) throw uploadError;
+      const { data: publicData } = admin.storage.from("media").getPublicUrl(filePath);
+      return new Response(JSON.stringify({ success: true, url: publicData.publicUrl, path: filePath }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // ------- SCREENSHOT-ONLY MODE (for progressive retries from client) -------
     if (mode === "screenshot") {

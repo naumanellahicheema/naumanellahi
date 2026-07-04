@@ -33,7 +33,7 @@ export default function AdminPosts() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="admin-page-header">
         <h1 className="text-2xl font-display font-bold" style={{ color: "hsl(var(--admin-fg))" }}>Blog Posts</h1>
         <button onClick={startNew} className="admin-btn"><Plus size={16} /> Add Post</button>
       </div>

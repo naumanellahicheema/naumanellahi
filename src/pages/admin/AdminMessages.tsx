@@ -79,7 +79,7 @@ export default function AdminMessages() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="admin-page-header">
         <div>
           <h1 className="text-2xl font-display font-bold" style={{ color: "hsl(var(--admin-fg))" }}>
             Inbox

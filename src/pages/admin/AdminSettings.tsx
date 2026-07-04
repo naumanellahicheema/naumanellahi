@@ -74,7 +74,7 @@ export default function AdminSettings() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="admin-page-header">
         <h1 className="text-2xl font-display font-bold" style={{ color: "hsl(var(--admin-fg))" }}>Site Settings</h1>
       </div>
       

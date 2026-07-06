@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowUpRight, ArrowRight, ExternalLink, Search } from "lucide-react";
+import { ArrowUpRight, ArrowRight, ExternalLink, Search, Share2 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { useProjects } from "@/hooks/usePortfolioData";
+import { useToast } from "@/hooks/use-toast";
 
 function SectionMarker({ n, label }: { n: string; label: string }) {
   return (

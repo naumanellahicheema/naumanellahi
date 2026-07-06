@@ -143,15 +143,15 @@ export default function Portfolio() {
             onClick={() => {
               const urls = (projects || [])
                 .map((p: any) => p.website_url)
-                .filter(Boolean);
+                .filter((url: string) => typeof url === "string" && url.trim().length > 0);
               if (urls.length === 0) {
                 toast({ title: "No URLs to share", description: "No projects have website links yet." });
                 return;
               }
               navigator.clipboard.writeText(urls.join("\n")).then(() => {
                 toast({
-                  title: "Project URLs copied",
-                  description: `${urls.length} website URL${urls.length === 1 ? "" : "s"} copied to clipboard.`,
+                  title: "Copied project URLs",
+                  description: `${urls.length} URL${urls.length === 1 ? "" : "s"} copied to the clipboard.`,
                 });
               });
             }}

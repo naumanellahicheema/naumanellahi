@@ -137,7 +137,31 @@ export default function Portfolio() {
 
       {/* ── Filter + search bar ────────────────────── */}
       <section className="editorial-section editorial-container rule-top">
-        <SectionMarker n="02" label="Archive" />
+        <div className="flex items-start justify-between gap-4">
+          <SectionMarker n="02" label="Archive" />
+          <button
+            onClick={() => {
+              const urls = (projects || [])
+                .map((p: any) => p.website_url)
+                .filter(Boolean);
+              if (urls.length === 0) {
+                toast({ title: "No URLs to share", description: "No projects have website links yet." });
+                return;
+              }
+              navigator.clipboard.writeText(urls.join("\n")).then(() => {
+                toast({
+                  title: "Project URLs copied",
+                  description: `${urls.length} website URL${urls.length === 1 ? "" : "s"} copied to clipboard.`,
+                });
+              });
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-foreground/15 text-foreground/70 hover:border-foreground/40 hover:text-foreground hover:bg-foreground/5 transition text-xs font-mono uppercase tracking-widest"
+            aria-label="Copy all project website URLs"
+          >
+            <Share2 size={14} />
+            <span className="hidden sm:inline">Share URLs</span>
+          </button>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end mb-10">
           <h2 className="display-h2 text-4xl sm:text-6xl lg:text-7xl lg:col-span-8">
             Browse the <span className="font-serif-italic text-foreground/60">archive.</span>

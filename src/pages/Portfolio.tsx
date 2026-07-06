@@ -16,6 +16,7 @@ function SectionMarker({ n, label }: { n: string; label: string }) {
 
 export default function Portfolio() {
   const { data: projects } = useProjects();
+  const { toast } = useToast();
   const [filter, setFilter] = useState<string>("all");
   const [query, setQuery] = useState("");
 

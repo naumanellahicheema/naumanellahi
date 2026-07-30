@@ -55,6 +55,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
+          <SEOHead />
+
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<><Index /><LiveChat /></>} />

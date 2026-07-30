@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, RequireAdmin } from "@/hooks/useAuth";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { SEOHead } from "@/components/SEOHead";
+
 
 import { LiveChat } from "@/components/LiveChat";
 import Index from "./pages/Index";

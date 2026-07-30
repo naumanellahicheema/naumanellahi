@@ -63,12 +63,13 @@ function buildSvg(opts: {
 }) {
   const titleLines = wrap(opts.title, 28, 3);
   const descLines = wrap(opts.description, 62, 2);
-  const titleSize = titleLines.length >= 3 ? 68 : titleLines.length === 2 ? 80 : 92;
+  const titleSize = titleLines.length >= 3 ? 62 : titleLines.length === 2 ? 78 : 92;
   const lineGap = titleSize * 1.14;
 
   // Title block is bottom-anchored so the eyebrow above and the description
   // below never collide, whatever the line count is.
-  const titleBaselineStart = 400 - (titleLines.length - 1) * lineGap;
+  const titleBaselineStart = 388 - (titleLines.length - 1) * lineGap;
+
 
   // The Inter variable font renders at its default weight in resvg, so bold
   // text is simulated with a matching stroke (faux bold).

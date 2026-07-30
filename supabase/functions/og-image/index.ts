@@ -61,25 +61,33 @@ function buildSvg(opts: {
   eyebrow: string;
   site: string;
 }) {
-  const titleLines = wrap(opts.title, 26, 3);
+  const titleLines = wrap(opts.title, 28, 3);
   const descLines = wrap(opts.description, 62, 2);
-  const titleSize = titleLines.length >= 3 ? 74 : titleLines.length === 2 ? 86 : 96;
-  const titleTop = 250 - (titleLines.length - 1) * (titleSize * 0.55);
+  const titleSize = titleLines.length >= 3 ? 68 : titleLines.length === 2 ? 80 : 92;
+  const lineGap = titleSize * 1.14;
+
+  // Title block is bottom-anchored so the eyebrow above and the description
+  // below never collide, whatever the line count is.
+  const titleBaselineStart = 400 - (titleLines.length - 1) * lineGap;
+
+  // The Inter variable font renders at its default weight in resvg, so bold
+  // text is simulated with a matching stroke (faux bold).
+  const bold = (w: number) => `stroke="#0A0A0A" stroke-width="${w}"`;
 
   const titleTspans = titleLines
     .map(
       (l, i) =>
-        `<text x="88" y="${titleTop + i * (titleSize * 1.12)}" font-family="Inter" font-size="${titleSize}" font-weight="700" fill="#0A0A0A" letter-spacing="-3">${esc(l)}</text>`,
+        `<text x="88" y="${titleBaselineStart + i * lineGap}" font-family="Inter" font-size="${titleSize}" fill="#0A0A0A" ${bold(2.4)} letter-spacing="-2">${esc(l)}</text>`,
     )
     .join("");
 
-  const descTop = titleTop + titleLines.length * (titleSize * 1.12) + 24;
   const descTspans = descLines
     .map(
       (l, i) =>
-        `<text x="88" y="${descTop + i * 44}" font-family="Inter" font-size="31" font-weight="400" fill="#4A4A4A">${esc(l)}</text>`,
+        `<text x="88" y="${452 + i * 44}" font-family="Inter" font-size="30" fill="#4A4A4A">${esc(l)}</text>`,
     )
     .join("");
+
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>

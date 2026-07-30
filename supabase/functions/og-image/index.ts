@@ -85,7 +85,8 @@ function buildSvg(opts: {
   const descTspans = descLines
     .map(
       (l, i) =>
-        `<text x="88" y="${452 + i * 44}" font-family="Inter" font-size="30" fill="#4A4A4A">${esc(l)}</text>`,
+        `<text x="88" y="${440 + i * 44}" font-family="Inter" font-size="30" fill="#4A4A4A">${esc(l)}</text>`,
+
     )
     .join("");
 

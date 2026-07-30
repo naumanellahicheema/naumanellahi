@@ -105,14 +105,28 @@ export default function AdminLayout() {
               </span>
               {!collapsed && <span className="text-base">Studio Admin</span>}
             </Link>
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="lg:hidden p-2 rounded-lg hover:bg-black/5"
-              aria-label="Close menu"
-            >
-              <X size={18} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPinned((v) => !v)}
+                className={`hidden lg:grid place-items-center w-9 h-9 rounded-xl transition-colors ${pinned ? "text-white" : "hover:bg-black/5"}`}
+                style={pinned
+                  ? { background: "hsl(var(--admin-accent))" }
+                  : { border: "1px solid hsl(var(--admin-border))", color: "hsl(var(--admin-muted-fg))" }}
+                title={pinned ? "Unpin sidebar" : "Pin sidebar (always visible)"}
+                aria-pressed={pinned}
+              >
+                {pinned ? <Pin size={15} /> : <PinOff size={15} />}
+              </button>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="lg:hidden p-2 rounded-lg hover:bg-black/5"
+                aria-label="Close menu"
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
+
 
           {/* Search trigger */}
           <div className="p-3">

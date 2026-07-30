@@ -118,7 +118,7 @@ function buildSvg(opts: {
   <circle cx="150" cy="76" r="9" fill="#FF5B21"/>
   <text x="172" y="116" font-family="Inter" font-size="30" font-weight="600" fill="#0A0A0A" letter-spacing="-0.5">${esc(opts.site)}</text>
 
-  <text x="88" y="186" font-family="Inter" font-size="20" font-weight="600" fill="#FF5B21" letter-spacing="4">${esc(opts.eyebrow.toUpperCase())}</text>
+  <text x="88" y="172" font-family="Inter" font-size="20" fill="#FF5B21" stroke="#FF5B21" stroke-width="0.6" letter-spacing="4">${esc(opts.eyebrow.toUpperCase())}</text>
 
   ${titleTspans}
   ${descTspans}

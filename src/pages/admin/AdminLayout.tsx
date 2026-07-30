@@ -5,7 +5,7 @@ import {
   LayoutDashboard, User, FolderOpen, Briefcase, GraduationCap, Award,
   MessageSquare, FileText, Mail, Image as ImageIcon, Settings, Users,
   Search, LogOut, Menu, X, PanelLeft, ChevronsLeft, ChevronsRight,
-  Command as CommandIcon, ExternalLink, Sparkles,
+  Command as CommandIcon, ExternalLink, Sparkles, Pin, PinOff,
 } from "lucide-react";
 import {
   CommandDialog, CommandEmpty, CommandGroup, CommandInput,
@@ -44,10 +44,19 @@ export default function AdminLayout() {
     return localStorage.getItem("admin.sidebar.collapsed") === "1";
   });
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [pinned, setPinned] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("admin.sidebar.pinned") === "1";
+  });
 
   useEffect(() => {
     localStorage.setItem("admin.sidebar.collapsed", collapsed ? "1" : "0");
   }, [collapsed]);
+
+  useEffect(() => {
+    localStorage.setItem("admin.sidebar.pinned", pinned ? "1" : "0");
+    if (pinned) setCollapsed(false);
+  }, [pinned]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -96,14 +105,28 @@ export default function AdminLayout() {
               </span>
               {!collapsed && <span className="text-base">Studio Admin</span>}
             </Link>
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="lg:hidden p-2 rounded-lg hover:bg-black/5"
-              aria-label="Close menu"
-            >
-              <X size={18} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPinned((v) => !v)}
+                className={`hidden lg:grid place-items-center w-9 h-9 rounded-xl transition-colors ${pinned ? "text-white" : "hover:bg-black/5"}`}
+                style={pinned
+                  ? { background: "hsl(var(--admin-accent))" }
+                  : { border: "1px solid hsl(var(--admin-border))", color: "hsl(var(--admin-muted-fg))" }}
+                title={pinned ? "Unpin sidebar" : "Pin sidebar (always visible)"}
+                aria-pressed={pinned}
+              >
+                {pinned ? <Pin size={15} /> : <PinOff size={15} />}
+              </button>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="lg:hidden p-2 rounded-lg hover:bg-black/5"
+                aria-label="Close menu"
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
+
 
           {/* Search trigger */}
           <div className="p-3">
@@ -168,10 +191,11 @@ export default function AdminLayout() {
                 {!collapsed && <span>Sign Out</span>}
               </button>
               <button
-                onClick={() => setCollapsed((v) => !v)}
-                className="hidden lg:grid place-items-center w-10 h-10 rounded-xl hover:bg-black/5"
+                onClick={() => !pinned && setCollapsed((v) => !v)}
+                disabled={pinned}
+                className="hidden lg:grid place-items-center w-10 h-10 rounded-xl hover:bg-black/5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                 style={{ border: "1px solid hsl(var(--admin-border))", color: "hsl(var(--admin-muted-fg))" }}
-                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                title={pinned ? "Sidebar pinned" : collapsed ? "Expand sidebar" : "Collapse sidebar"}
               >
                 {collapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
               </button>

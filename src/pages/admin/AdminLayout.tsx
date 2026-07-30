@@ -191,10 +191,11 @@ export default function AdminLayout() {
                 {!collapsed && <span>Sign Out</span>}
               </button>
               <button
-                onClick={() => setCollapsed((v) => !v)}
-                className="hidden lg:grid place-items-center w-10 h-10 rounded-xl hover:bg-black/5"
+                onClick={() => !pinned && setCollapsed((v) => !v)}
+                disabled={pinned}
+                className="hidden lg:grid place-items-center w-10 h-10 rounded-xl hover:bg-black/5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                 style={{ border: "1px solid hsl(var(--admin-border))", color: "hsl(var(--admin-muted-fg))" }}
-                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                title={pinned ? "Sidebar pinned" : collapsed ? "Expand sidebar" : "Collapse sidebar"}
               >
                 {collapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
               </button>

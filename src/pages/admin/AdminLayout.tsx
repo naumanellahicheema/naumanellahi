@@ -5,7 +5,7 @@ import {
   LayoutDashboard, User, FolderOpen, Briefcase, GraduationCap, Award,
   MessageSquare, FileText, Mail, Image as ImageIcon, Settings, Users,
   Search, LogOut, Menu, X, PanelLeft, ChevronsLeft, ChevronsRight,
-  Command as CommandIcon, ExternalLink, Sparkles,
+  Command as CommandIcon, ExternalLink, Sparkles, Pin, PinOff,
 } from "lucide-react";
 import {
   CommandDialog, CommandEmpty, CommandGroup, CommandInput,
@@ -44,10 +44,19 @@ export default function AdminLayout() {
     return localStorage.getItem("admin.sidebar.collapsed") === "1";
   });
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [pinned, setPinned] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("admin.sidebar.pinned") === "1";
+  });
 
   useEffect(() => {
     localStorage.setItem("admin.sidebar.collapsed", collapsed ? "1" : "0");
   }, [collapsed]);
+
+  useEffect(() => {
+    localStorage.setItem("admin.sidebar.pinned", pinned ? "1" : "0");
+    if (pinned) setCollapsed(false);
+  }, [pinned]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
